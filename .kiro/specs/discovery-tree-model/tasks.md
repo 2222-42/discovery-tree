@@ -42,7 +42,7 @@
   - **Property 2: Invalid description rejection**
   - **Validates: Requirements 1.2**
 
-- [ ] 5. Implement basic status change functionality
+- [x] 5. Implement basic status change functionality
   - Add ChangeStatus() method to Task entity
   - Implement basic status validation
   - Add UpdateDescription() method with validation

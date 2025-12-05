@@ -90,3 +90,33 @@ func (t *Task) UpdatedAt() time.Time {
 func (t *Task) IsRoot() bool {
 	return t.parentID == nil
 }
+
+// ChangeStatus updates the task's status with validation
+// This method performs basic status validation (checking if the status is valid)
+// More complex validation (e.g., bottom-to-top enforcement) will be handled by TaskValidator
+func (t *Task) ChangeStatus(newStatus Status) error {
+	// Validate that the new status is a valid status value
+	if !newStatus.IsValid() {
+		return NewValidationError("status", "invalid status value")
+	}
+
+	// Update the status and timestamp
+	t.status = newStatus
+	t.updatedAt = time.Now()
+
+	return nil
+}
+
+// UpdateDescription updates the task's description with validation
+func (t *Task) UpdateDescription(description string) error {
+	// Validate description is not empty or whitespace-only
+	if strings.TrimSpace(description) == "" {
+		return NewValidationError("description", "description cannot be empty")
+	}
+
+	// Update the description and timestamp
+	t.description = description
+	t.updatedAt = time.Now()
+
+	return nil
+}

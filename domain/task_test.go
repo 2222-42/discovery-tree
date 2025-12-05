@@ -241,3 +241,177 @@ func TestTask_GetterMethods(t *testing.T) {
 		t.Error("IsRoot() = true, want false for child task")
 	}
 }
+
+func TestTask_ChangeStatus_ValidStatus(t *testing.T) {
+	task, err := NewTask("Test task", nil, 0)
+	if err != nil {
+		t.Fatalf("failed to create task: %v", err)
+	}
+	
+	initialStatus := task.Status()
+	initialUpdatedAt := task.UpdatedAt()
+	
+	// Wait a bit to ensure timestamp changes
+	time.Sleep(2 * time.Millisecond)
+	
+	// Change to a valid status
+	err = task.ChangeStatus(StatusInProgress)
+	if err != nil {
+		t.Errorf("expected no error when changing to valid status, got %v", err)
+	}
+	
+	if task.Status() != StatusInProgress {
+		t.Errorf("expected status %v, got %v", StatusInProgress, task.Status())
+	}
+	
+	// Check that UpdatedAt was updated
+	if !task.UpdatedAt().After(initialUpdatedAt) {
+		t.Error("expected UpdatedAt to be updated after status change")
+	}
+	
+	// Verify we can change to other valid statuses
+	validStatuses := []Status{StatusTODO, StatusDONE, StatusBlocked, StatusRootWorkItem}
+	for _, status := range validStatuses {
+		err = task.ChangeStatus(status)
+		if err != nil {
+			t.Errorf("expected no error when changing to %v, got %v", status, err)
+		}
+		if task.Status() != status {
+			t.Errorf("expected status %v, got %v", status, task.Status())
+		}
+	}
+	
+	_ = initialStatus // Avoid unused variable warning
+}
+
+func TestTask_ChangeStatus_InvalidStatus(t *testing.T) {
+	task, err := NewTask("Test task", nil, 0)
+	if err != nil {
+		t.Fatalf("failed to create task: %v", err)
+	}
+	
+	initialStatus := task.Status()
+	
+	// Try to change to an invalid status
+	invalidStatus := Status(-1)
+	err = task.ChangeStatus(invalidStatus)
+	
+	if err == nil {
+		t.Error("expected error when changing to invalid status, got nil")
+	}
+	
+	// Check that it's a ValidationError
+	if _, ok := err.(ValidationError); !ok {
+		t.Errorf("expected ValidationError, got %T", err)
+	}
+	
+	// Check error message contains "status"
+	if !strings.Contains(err.Error(), "status") {
+		t.Errorf("expected error message to mention 'status', got %q", err.Error())
+	}
+	
+	// Verify status didn't change
+	if task.Status() != initialStatus {
+		t.Errorf("expected status to remain %v after failed change, got %v", initialStatus, task.Status())
+	}
+	
+	// Try another invalid status
+	invalidStatus2 := Status(999)
+	err = task.ChangeStatus(invalidStatus2)
+	if err == nil {
+		t.Error("expected error when changing to invalid status 999, got nil")
+	}
+}
+
+func TestTask_UpdateDescription_ValidDescription(t *testing.T) {
+	task, err := NewTask("Initial description", nil, 0)
+	if err != nil {
+		t.Fatalf("failed to create task: %v", err)
+	}
+	
+	initialUpdatedAt := task.UpdatedAt()
+	
+	// Wait a bit to ensure timestamp changes
+	time.Sleep(2 * time.Millisecond)
+	
+	newDescription := "Updated description"
+	err = task.UpdateDescription(newDescription)
+	
+	if err != nil {
+		t.Errorf("expected no error when updating to valid description, got %v", err)
+	}
+	
+	if task.Description() != newDescription {
+		t.Errorf("expected description %q, got %q", newDescription, task.Description())
+	}
+	
+	// Check that UpdatedAt was updated
+	if !task.UpdatedAt().After(initialUpdatedAt) {
+		t.Error("expected UpdatedAt to be updated after description change")
+	}
+}
+
+func TestTask_UpdateDescription_EmptyDescription(t *testing.T) {
+	task, err := NewTask("Initial description", nil, 0)
+	if err != nil {
+		t.Fatalf("failed to create task: %v", err)
+	}
+	
+	initialDescription := task.Description()
+	
+	testCases := []struct {
+		name        string
+		description string
+	}{
+		{"empty string", ""},
+		{"whitespace only", "   "},
+		{"tabs only", "\t\t"},
+		{"newlines only", "\n\n"},
+		{"mixed whitespace", " \t\n "},
+	}
+	
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := task.UpdateDescription(tc.description)
+			
+			if err == nil {
+				t.Error("expected error for empty/whitespace description, got nil")
+			}
+			
+			// Check that it's a ValidationError
+			if _, ok := err.(ValidationError); !ok {
+				t.Errorf("expected ValidationError, got %T", err)
+			}
+			
+			// Check error message contains "description"
+			if !strings.Contains(err.Error(), "description") {
+				t.Errorf("expected error message to mention 'description', got %q", err.Error())
+			}
+			
+			// Verify description didn't change
+			if task.Description() != initialDescription {
+				t.Errorf("expected description to remain %q after failed update, got %q", initialDescription, task.Description())
+			}
+		})
+	}
+}
+
+func TestTask_UpdateDescription_PreservesWhitespace(t *testing.T) {
+	task, err := NewTask("Initial description", nil, 0)
+	if err != nil {
+		t.Fatalf("failed to create task: %v", err)
+	}
+	
+	// Description with leading/trailing whitespace but non-empty content
+	newDescription := "  Description with spaces  "
+	err = task.UpdateDescription(newDescription)
+	
+	if err != nil {
+		t.Errorf("expected no error for description with whitespace, got %v", err)
+	}
+	
+	// The description should be preserved as-is (not trimmed)
+	if task.Description() != newDescription {
+		t.Errorf("expected description %q, got %q", newDescription, task.Description())
+	}
+}
