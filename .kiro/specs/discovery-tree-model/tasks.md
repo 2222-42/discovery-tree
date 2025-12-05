@@ -17,7 +17,7 @@
   - **Property 1: Root task creation with valid description**
   - **Validates: Requirements 1.1, 1.3**
 
-- [ ] 3. Implement Status value object
+- [x] 3. Implement Status value object
   - Create Status type with constants (TODO, InProgress, DONE, Blocked, RootWorkItem)
   - Implement NewStatus() with validation
   - Implement String() and IsValid() methods
