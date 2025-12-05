@@ -56,7 +56,7 @@
   - **Property 10: DONE status recording**
   - **Validates: Requirements 3.3**
 
-- [ ] 6. Implement TaskRepository interface
+- [x] 6. Implement TaskRepository interface
   - Define repository interface with all methods (Save, FindByID, FindByParentID, FindRoot, FindAll, Delete, DeleteSubtree)
   - Create in-memory implementation for testing
   - _Requirements: 10.4_
