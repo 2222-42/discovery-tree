@@ -6,7 +6,7 @@
   - Create base error types (ValidationError, NotFoundError, ConstraintViolationError)
   - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5_
 
-- [ ] 2. Implement TaskID value object
+- [x] 2. Implement TaskID value object
   - Create TaskID struct with string value
   - Implement NewTaskID() for generation
   - Implement TaskIDFromString() with validation
