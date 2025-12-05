@@ -27,7 +27,7 @@
   - **Property 9: Invalid status rejection**
   - **Validates: Requirements 3.2**
 
-- [ ] 4. Implement Task entity (aggregate root)
+- [x] 4. Implement Task entity (aggregate root)
   - Create Task struct with all fields (id, description, status, parentID, position, timestamps)
   - Implement NewTask() constructor with validation
   - Implement getter methods (ID, Status, ParentID, Position, Description)
