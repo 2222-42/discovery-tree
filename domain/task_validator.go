@@ -142,17 +142,18 @@ func (v *taskValidator) isDescendant(ancestor TaskID, potentialDescendant TaskID
 		}
 
 		// If we reached the root, potentialDescendant is not a descendant of ancestor
-		if task.ParentID() == nil {
+		parentId := task.ParentID()
+		if parentId == nil {
 			return false
 		}
 
 		// If the parent is the ancestor, potentialDescendant is a descendant
-		if task.ParentID().Equals(ancestor) {
+		if parentID.Equals(ancestor) {
 			return true
 		}
 
 		// Move up to the parent
-		current = *task.ParentID()
+		current = *parentId()
 	}
 }
 
