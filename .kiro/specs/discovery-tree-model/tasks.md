@@ -183,7 +183,7 @@
   - **Property 18: Subtree retrieval**
   - **Validates: Requirements 6.4**
 
-- [ ] 15. Implement move operations
+- [x] 15. Implement move operations
   - Add Move() method to Task entity
   - Implement position adjustment logic for old and new parents
   - Update TaskValidator to include ValidateMove() for cycle detection
@@ -206,7 +206,7 @@
   - **Property 26: Cycle prevention in moves**
   - **Validates: Requirements 8.4**
 
-- [ ] 16. Implement delete operations
+- [x] 16. Implement delete operations
   - Implement Delete() in repository for leaf tasks
   - Implement DeleteSubtree() for cascading deletion
   - Add position adjustment logic for remaining siblings
@@ -221,7 +221,7 @@
   - **Property 28: Cascading deletion**
   - **Validates: Requirements 9.2**
 
-- [ ] 17. Create property test generators
+- [x] 17. Create property test generators
   - Implement generator for valid descriptions
   - Implement generator for valid tree structures
   - Implement generator for status values
@@ -229,7 +229,7 @@
   - Ensure generators create diverse test cases
   - _Requirements: All property tests_
 
-- [ ] 18. Final checkpoint - Ensure all tests pass
+- [x] 18. Final checkpoint - Ensure all tests pass
   - Run all unit tests and property tests
   - Verify all 28 correctness properties are validated
   - Ensure test coverage is comprehensive
