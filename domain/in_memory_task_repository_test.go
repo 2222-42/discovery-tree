@@ -72,15 +72,16 @@ func TestInMemoryTaskRepository_FindByParentID(t *testing.T) {
 	repo.Save(parent)
 
 	// Create child tasks
-	child1, _ := NewTask("Child 1", &parent.id, 0)
-	child2, _ := NewTask("Child 2", &parent.id, 1)
-	child3, _ := NewTask("Child 3", &parent.id, 2)
+	parentID := parent.ID()
+	child1, _ := NewTask("Child 1", &parentID, 0)
+	child2, _ := NewTask("Child 2", &parentID, 1)
+	child3, _ := NewTask("Child 3", &parentID, 2)
 	repo.Save(child1)
 	repo.Save(child2)
 	repo.Save(child3)
 
 	// Find children
-	children, err := repo.FindByParentID(&parent.id)
+	children, err := repo.FindByParentID(&parentID)
 	if err != nil {
 		t.Errorf("FindByParentID failed: %v", err)
 	}
@@ -103,7 +104,8 @@ func TestInMemoryTaskRepository_FindRoot(t *testing.T) {
 	repo.Save(root)
 
 	// Create child task
-	child, _ := NewTask("Child", &root.id, 0)
+	rootID := root.ID()
+	child, _ := NewTask("Child", &rootID, 0)
 	repo.Save(child)
 
 	// Find root
@@ -129,8 +131,9 @@ func TestInMemoryTaskRepository_FindAll(t *testing.T) {
 	repo := NewInMemoryTaskRepository()
 
 	task1, _ := NewTask("Task 1", nil, 0)
-	task2, _ := NewTask("Task 2", &task1.id, 0)
-	task3, _ := NewTask("Task 3", &task1.id, 1)
+	task1ID := task1.ID()
+	task2, _ := NewTask("Task 2", &task1ID, 0)
+	task3, _ := NewTask("Task 3", &task1ID, 1)
 
 	repo.Save(task1)
 	repo.Save(task2)
@@ -187,13 +190,15 @@ func TestInMemoryTaskRepository_DeleteSubtree(t *testing.T) {
 	root, _ := NewTask("Root", nil, 0)
 	repo.Save(root)
 
-	child1, _ := NewTask("Child 1", &root.id, 0)
-	child2, _ := NewTask("Child 2", &root.id, 1)
+	rootID := root.ID()
+	child1, _ := NewTask("Child 1", &rootID, 0)
+	child2, _ := NewTask("Child 2", &rootID, 1)
 	repo.Save(child1)
 	repo.Save(child2)
 
-	grandchild1, _ := NewTask("Grandchild 1", &child1.id, 0)
-	grandchild2, _ := NewTask("Grandchild 2", &child1.id, 1)
+	child1ID := child1.ID()
+	grandchild1, _ := NewTask("Grandchild 1", &child1ID, 0)
+	grandchild2, _ := NewTask("Grandchild 2", &child1ID, 1)
 	repo.Save(grandchild1)
 	repo.Save(grandchild2)
 

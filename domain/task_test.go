@@ -264,6 +264,11 @@ func TestTask_ChangeStatus_ValidStatus(t *testing.T) {
 		t.Errorf("expected status %v, got %v", StatusInProgress, task.Status())
 	}
 	
+	// Verify the status actually changed from the initial value
+	if task.Status() == initialStatus {
+		t.Error("expected status to change from initial value")
+	}
+	
 	// Check that UpdatedAt was updated
 	if !task.UpdatedAt().After(initialUpdatedAt) {
 		t.Error("expected UpdatedAt to be updated after status change")
@@ -280,8 +285,6 @@ func TestTask_ChangeStatus_ValidStatus(t *testing.T) {
 			t.Errorf("expected status %v, got %v", status, task.Status())
 		}
 	}
-	
-	_ = initialStatus // Avoid unused variable warning
 }
 
 func TestTask_ChangeStatus_InvalidStatus(t *testing.T) {
