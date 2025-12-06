@@ -183,7 +183,7 @@
   - **Property 18: Subtree retrieval**
   - **Validates: Requirements 6.4**
 
-- [ ] 15. Implement move operations
+- [x] 15. Implement move operations
   - Add Move() method to Task entity
   - Implement position adjustment logic for old and new parents
   - Update TaskValidator to include ValidateMove() for cycle detection

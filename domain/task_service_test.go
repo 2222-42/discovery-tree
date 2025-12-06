@@ -701,3 +701,320 @@ func TestTaskService_ChangeTaskStatus_BottomToTopEnforcement(t *testing.T) {
 		}
 	}
 }
+
+func TestTaskService_MoveTask_WithinSameParent(t *testing.T) {
+	repo := NewInMemoryTaskRepository()
+	service := NewTaskService(repo)
+
+	// Create parent with 3 children
+	parent, _ := service.CreateRootTask("Parent")
+	child1, _ := service.CreateChildTask("Child 1", parent.ID())
+	child2, _ := service.CreateChildTask("Child 2", parent.ID())
+	child3, _ := service.CreateChildTask("Child 3", parent.ID())
+
+	// Move child1 from position 0 to position 2
+	err := service.MoveTask(child1.ID(), &parent.id, 2)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	// Verify new positions: child2(0), child3(1), child1(2)
+	children, _ := repo.FindByParentID(&parent.id)
+	if len(children) != 3 {
+		t.Fatalf("expected 3 children, got %d", len(children))
+	}
+
+	// Check positions
+	if children[0].ID().Equals(child2.ID()) && children[0].Position() != 0 {
+		t.Errorf("expected child2 at position 0, got %d", children[0].Position())
+	}
+	if children[1].ID().Equals(child3.ID()) && children[1].Position() != 1 {
+		t.Errorf("expected child3 at position 1, got %d", children[1].Position())
+	}
+	if children[2].ID().Equals(child1.ID()) && children[2].Position() != 2 {
+		t.Errorf("expected child1 at position 2, got %d", children[2].Position())
+	}
+}
+
+func TestTaskService_MoveTask_ToDifferentParent(t *testing.T) {
+	repo := NewInMemoryTaskRepository()
+	service := NewTaskService(repo)
+
+	// Create two parents with children
+	parent1, _ := service.CreateRootTask("Parent 1")
+	parent2, _ := service.CreateChildTask("Parent 2", parent1.ID())
+	
+	child1, _ := service.CreateChildTask("Child 1", parent1.ID())
+	child2, _ := service.CreateChildTask("Child 2", parent1.ID())
+	_, _ = service.CreateChildTask("Child 3", parent2.ID())
+
+	// Move child1 from parent1 to parent2
+	err := service.MoveTask(child1.ID(), &parent2.id, 1)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	// Verify child1 is now under parent2
+	retrieved, _ := repo.FindByID(child1.ID())
+	if !retrieved.ParentID().Equals(parent2.ID()) {
+		t.Errorf("expected child1 parent to be parent2, got %v", retrieved.ParentID())
+	}
+	if retrieved.Position() != 1 {
+		t.Errorf("expected child1 position 1, got %d", retrieved.Position())
+	}
+
+	// Verify parent1 children positions adjusted
+	// parent1 should have parent2 and child2
+	parent1Children, _ := repo.FindByParentID(&parent1.id)
+	if len(parent1Children) != 2 {
+		t.Fatalf("expected 2 children under parent1, got %d", len(parent1Children))
+	}
+	// parent2 should be at position 0, child2 at position 1
+	if parent1Children[0].ID().Equals(parent2.ID()) && parent1Children[0].Position() != 0 {
+		t.Errorf("expected parent2 at position 0, got %d", parent1Children[0].Position())
+	}
+	if parent1Children[1].ID().Equals(child2.ID()) && parent1Children[1].Position() != 1 {
+		t.Errorf("expected child2 at position 1, got %d", parent1Children[1].Position())
+	}
+
+	// Verify parent2 children positions adjusted
+	parent2Children, _ := repo.FindByParentID(&parent2.id)
+	if len(parent2Children) != 2 {
+		t.Fatalf("expected 2 children under parent2, got %d", len(parent2Children))
+	}
+}
+
+func TestTaskService_MoveTask_SubtreeMovesWithParent(t *testing.T) {
+	repo := NewInMemoryTaskRepository()
+	service := NewTaskService(repo)
+
+	// Create tree: root -> parent1 -> child -> grandchild
+	//                   -> parent2
+	root, _ := service.CreateRootTask("Root")
+	parent1, _ := service.CreateChildTask("Parent 1", root.ID())
+	parent2, _ := service.CreateChildTask("Parent 2", root.ID())
+	child, _ := service.CreateChildTask("Child", parent1.ID())
+	grandchild, _ := service.CreateChildTask("Grandchild", child.ID())
+
+	// Move parent1 (with its subtree) under parent2
+	err := service.MoveTask(parent1.ID(), &parent2.id, 0)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	// Verify parent1 is now under parent2
+	retrievedParent1, _ := repo.FindByID(parent1.ID())
+	if !retrievedParent1.ParentID().Equals(parent2.ID()) {
+		t.Errorf("expected parent1 under parent2")
+	}
+
+	// Verify child is still under parent1
+	retrievedChild, _ := repo.FindByID(child.ID())
+	if !retrievedChild.ParentID().Equals(parent1.ID()) {
+		t.Errorf("expected child still under parent1")
+	}
+
+	// Verify grandchild is still under child
+	retrievedGrandchild, _ := repo.FindByID(grandchild.ID())
+	if !retrievedGrandchild.ParentID().Equals(child.ID()) {
+		t.Errorf("expected grandchild still under child")
+	}
+}
+
+func TestTaskService_MoveTask_PreventCycle(t *testing.T) {
+	repo := NewInMemoryTaskRepository()
+	service := NewTaskService(repo)
+
+	// Create tree: root -> parent -> child
+	root, _ := service.CreateRootTask("Root")
+	parent, _ := service.CreateChildTask("Parent", root.ID())
+	child, _ := service.CreateChildTask("Child", parent.ID())
+
+	// Try to move parent under its own child (creates cycle)
+	err := service.MoveTask(parent.ID(), &child.id, 0)
+	if err == nil {
+		t.Fatal("expected error when creating cycle, got nil")
+	}
+
+	if _, ok := err.(ConstraintViolationError); !ok {
+		t.Errorf("expected ConstraintViolationError, got %T", err)
+	}
+
+	// Verify parent is still under root
+	retrievedParent, _ := repo.FindByID(parent.ID())
+	if !retrievedParent.ParentID().Equals(root.ID()) {
+		t.Errorf("expected parent still under root after failed move")
+	}
+}
+
+func TestTaskService_MoveTask_NoOpMove(t *testing.T) {
+	repo := NewInMemoryTaskRepository()
+	service := NewTaskService(repo)
+
+	// Create parent with child
+	parent, _ := service.CreateRootTask("Parent")
+	child, _ := service.CreateChildTask("Child", parent.ID())
+
+	// Move child to same parent and position (no-op)
+	err := service.MoveTask(child.ID(), &parent.id, 0)
+	if err != nil {
+		t.Errorf("expected no error for no-op move, got %v", err)
+	}
+
+	// Verify child is still at position 0
+	retrieved, _ := repo.FindByID(child.ID())
+	if retrieved.Position() != 0 {
+		t.Errorf("expected position 0, got %d", retrieved.Position())
+	}
+}
+
+func TestTaskService_MoveTask_PositionAdjustmentLeft(t *testing.T) {
+	repo := NewInMemoryTaskRepository()
+	service := NewTaskService(repo)
+
+	// Create parent with 4 children
+	parent, _ := service.CreateRootTask("Parent")
+	child1, _ := service.CreateChildTask("Child 1", parent.ID())
+	child2, _ := service.CreateChildTask("Child 2", parent.ID())
+	child3, _ := service.CreateChildTask("Child 3", parent.ID())
+	child4, _ := service.CreateChildTask("Child 4", parent.ID())
+
+	// Move child3 (position 2) to position 0
+	err := service.MoveTask(child3.ID(), &parent.id, 0)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	// Verify new order: child3(0), child1(1), child2(2), child4(3)
+	children, _ := repo.FindByParentID(&parent.id)
+	if len(children) != 4 {
+		t.Fatalf("expected 4 children, got %d", len(children))
+	}
+
+	expectedOrder := []TaskID{child3.ID(), child1.ID(), child2.ID(), child4.ID()}
+	for i, expected := range expectedOrder {
+		if !children[i].ID().Equals(expected) {
+			t.Errorf("position %d: expected %v, got %v", i, expected, children[i].ID())
+		}
+		if children[i].Position() != i {
+			t.Errorf("child at index %d has wrong position: expected %d, got %d", i, i, children[i].Position())
+		}
+	}
+}
+
+func TestTaskService_MoveTask_PositionAdjustmentRight(t *testing.T) {
+	repo := NewInMemoryTaskRepository()
+	service := NewTaskService(repo)
+
+	// Create parent with 4 children
+	parent, _ := service.CreateRootTask("Parent")
+	child1, _ := service.CreateChildTask("Child 1", parent.ID())
+	child2, _ := service.CreateChildTask("Child 2", parent.ID())
+	child3, _ := service.CreateChildTask("Child 3", parent.ID())
+	child4, _ := service.CreateChildTask("Child 4", parent.ID())
+
+	// Move child1 (position 0) to position 3
+	err := service.MoveTask(child1.ID(), &parent.id, 3)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	// Verify new order: child2(0), child3(1), child4(2), child1(3)
+	children, _ := repo.FindByParentID(&parent.id)
+	if len(children) != 4 {
+		t.Fatalf("expected 4 children, got %d", len(children))
+	}
+
+	expectedOrder := []TaskID{child2.ID(), child3.ID(), child4.ID(), child1.ID()}
+	for i, expected := range expectedOrder {
+		if !children[i].ID().Equals(expected) {
+			t.Errorf("position %d: expected %v, got %v", i, expected, children[i].ID())
+		}
+		if children[i].Position() != i {
+			t.Errorf("child at index %d has wrong position: expected %d, got %d", i, i, children[i].Position())
+		}
+	}
+}
+
+func TestTaskService_MoveTask_NonExistentTask(t *testing.T) {
+	repo := NewInMemoryTaskRepository()
+	service := NewTaskService(repo)
+
+	parent, _ := service.CreateRootTask("Parent")
+	nonExistentID := NewTaskID()
+
+	err := service.MoveTask(nonExistentID, &parent.id, 0)
+	if err == nil {
+		t.Fatal("expected error for non-existent task, got nil")
+	}
+
+	if _, ok := err.(NotFoundError); !ok {
+		t.Errorf("expected NotFoundError, got %T", err)
+	}
+}
+
+func TestTaskService_MoveTask_NonExistentParent(t *testing.T) {
+	repo := NewInMemoryTaskRepository()
+	service := NewTaskService(repo)
+
+	root, _ := service.CreateRootTask("Root")
+	child, _ := service.CreateChildTask("Child", root.ID())
+	nonExistentParentID := NewTaskID()
+
+	err := service.MoveTask(child.ID(), &nonExistentParentID, 0)
+	if err == nil {
+		t.Fatal("expected error for non-existent parent, got nil")
+	}
+
+	if _, ok := err.(NotFoundError); !ok {
+		t.Errorf("expected NotFoundError, got %T", err)
+	}
+}
+
+func TestTaskService_MoveTask_NegativePosition(t *testing.T) {
+	repo := NewInMemoryTaskRepository()
+	service := NewTaskService(repo)
+
+	root, _ := service.CreateRootTask("Root")
+	child, _ := service.CreateChildTask("Child", root.ID())
+
+	err := service.MoveTask(child.ID(), &root.id, -1)
+	if err == nil {
+		t.Fatal("expected error for negative position, got nil")
+	}
+
+	if _, ok := err.(ValidationError); !ok {
+		t.Errorf("expected ValidationError, got %T", err)
+	}
+}
+
+func TestTaskService_MoveTask_ComplexReordering(t *testing.T) {
+	repo := NewInMemoryTaskRepository()
+	service := NewTaskService(repo)
+
+	// Create parent with 5 children
+	parent, _ := service.CreateRootTask("Parent")
+	child1, _ := service.CreateChildTask("Child 1", parent.ID())
+	child2, _ := service.CreateChildTask("Child 2", parent.ID())
+	_, _ = service.CreateChildTask("Child 3", parent.ID())
+	_, _ = service.CreateChildTask("Child 4", parent.ID())
+	child5, _ := service.CreateChildTask("Child 5", parent.ID())
+
+	// Perform multiple moves
+	service.MoveTask(child2.ID(), &parent.id, 4) // Move child2 to end
+	service.MoveTask(child5.ID(), &parent.id, 0) // Move child5 to start
+	service.MoveTask(child1.ID(), &parent.id, 2) // Move child1 to middle
+
+	// Verify final order
+	children, _ := repo.FindByParentID(&parent.id)
+	if len(children) != 5 {
+		t.Fatalf("expected 5 children, got %d", len(children))
+	}
+
+	// Verify all positions are sequential
+	for i, child := range children {
+		if child.Position() != i {
+			t.Errorf("child at index %d has wrong position: expected %d, got %d", i, i, child.Position())
+		}
+	}
+}

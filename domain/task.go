@@ -120,3 +120,29 @@ func (t *Task) UpdateDescription(description string) error {
 
 	return nil
 }
+
+// Move updates the task's parent and position
+// This method only updates the task's internal state
+// Position adjustments for siblings should be handled by the caller (e.g., TaskService)
+// Validation (cycle detection) should be performed before calling this method
+func (t *Task) Move(newParentID *TaskID, newPosition int) error {
+	// Validate position is non-negative
+	if newPosition < 0 {
+		return NewValidationError("position", "position must be non-negative")
+	}
+
+	// Update parent and position
+	t.parentID = newParentID
+	t.position = newPosition
+	t.updatedAt = time.Now()
+
+	// Update status if moving to/from root
+	if newParentID == nil {
+		t.status = StatusRootWorkItem
+	} else if t.status == StatusRootWorkItem {
+		// If moving from root to non-root, change status to TODO
+		t.status = StatusTODO
+	}
+
+	return nil
+}

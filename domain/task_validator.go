@@ -61,9 +61,99 @@ func (v *taskValidator) ValidateStatusChange(task *Task, newStatus Status) error
 // ValidateMove validates whether a move operation is allowed
 // Prevents cycles and validates that the new parent exists
 func (v *taskValidator) ValidateMove(taskID TaskID, newParentID *TaskID, newPosition int) error {
-	// TODO: Implement move validation (cycle detection)
-	// This will be implemented in a future task
+	// Validate position is non-negative
+	if newPosition < 0 {
+		return NewValidationError("position", "position must be non-negative")
+	}
+
+	// Verify the task being moved exists
+	task, err := v.repo.FindByID(taskID)
+	if err != nil {
+		return err
+	}
+
+	// If moving to root (newParentID is nil), no cycle check needed
+	if newParentID == nil {
+		// Check if there's already a root task (unless we're moving the current root)
+		if !task.IsRoot() {
+			existingRoot, err := v.repo.FindRoot()
+			if err == nil && existingRoot != nil {
+				return NewConstraintViolationError(
+					"single-root",
+					"cannot move task to root: a root task already exists",
+				)
+			}
+		}
+		return nil
+	}
+
+	// Verify the new parent exists
+	newParent, err := v.repo.FindByID(*newParentID)
+	if err != nil {
+		return err
+	}
+
+	// Prevent moving a task to itself
+	if taskID.Equals(*newParentID) {
+		return NewConstraintViolationError(
+			"cycle-prevention",
+			"cannot move task to itself",
+		)
+	}
+
+	// Prevent creating a cycle: check if newParent is a descendant of task
+	if v.isDescendant(taskID, *newParentID) {
+		return NewConstraintViolationError(
+			"cycle-prevention",
+			"cannot move task to its own descendant",
+		)
+	}
+
+	// Validate position is within valid range for the new parent
+	siblings, err := v.repo.FindByParentID(newParentID)
+	if err != nil {
+		return err
+	}
+
+	// If moving within the same parent, max position is len(siblings) - 1
+	// If moving to a different parent, max position is len(siblings)
+	maxPosition := len(siblings)
+	if task.ParentID() != nil && newParent.ID().Equals(*task.ParentID()) {
+		maxPosition = len(siblings) - 1
+	}
+
+	if newPosition > maxPosition {
+		return NewValidationError("position", "position exceeds valid range")
+	}
+
 	return nil
+}
+
+// isDescendant checks if potentialDescendant is a descendant of ancestor
+func (v *taskValidator) isDescendant(ancestor TaskID, potentialDescendant TaskID) bool {
+	// Start from potentialDescendant and walk up the tree
+	current := potentialDescendant
+	
+	for {
+		task, err := v.repo.FindByID(current)
+		if err != nil {
+			// If we can't find the task, it's not a descendant
+			return false
+		}
+
+		// If we reached the root, potentialDescendant is not a descendant of ancestor
+		if task.ParentID() == nil {
+			return false
+		}
+
+		// If the parent is the ancestor, potentialDescendant is a descendant
+		if task.ParentID().Equals(ancestor) {
+			return true
+		}
+
+		// Move up to the parent
+		current = *task.ParentID()
+	}
 }
 
 // ValidateDelete validates whether a delete operation is allowed

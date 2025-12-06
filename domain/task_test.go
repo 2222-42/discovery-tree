@@ -418,3 +418,145 @@ func TestTask_UpdateDescription_PreservesWhitespace(t *testing.T) {
 		t.Errorf("expected description %q, got %q", newDescription, task.Description())
 	}
 }
+
+func TestTask_Move_ValidMove(t *testing.T) {
+	parentID := NewTaskID()
+	task, err := NewTask("Test task", &parentID, 2)
+	if err != nil {
+		t.Fatalf("failed to create task: %v", err)
+	}
+
+	initialUpdatedAt := task.UpdatedAt()
+	time.Sleep(2 * time.Millisecond)
+
+	newParentID := NewTaskID()
+	newPosition := 5
+
+	err = task.Move(&newParentID, newPosition)
+	if err != nil {
+		t.Errorf("expected no error for valid move, got %v", err)
+	}
+
+	if task.ParentID() == nil || !task.ParentID().Equals(newParentID) {
+		t.Errorf("expected parent ID %v, got %v", newParentID, task.ParentID())
+	}
+
+	if task.Position() != newPosition {
+		t.Errorf("expected position %d, got %d", newPosition, task.Position())
+	}
+
+	// Check that UpdatedAt was updated
+	if !task.UpdatedAt().After(initialUpdatedAt) {
+		t.Error("expected UpdatedAt to be updated after move")
+	}
+}
+
+func TestTask_Move_ToRoot(t *testing.T) {
+	parentID := NewTaskID()
+	task, err := NewTask("Test task", &parentID, 2)
+	if err != nil {
+		t.Fatalf("failed to create task: %v", err)
+	}
+
+	// Move to root (nil parent)
+	err = task.Move(nil, 0)
+	if err != nil {
+		t.Errorf("expected no error for move to root, got %v", err)
+	}
+
+	if task.ParentID() != nil {
+		t.Errorf("expected nil parent ID for root task, got %v", task.ParentID())
+	}
+
+	if task.Position() != 0 {
+		t.Errorf("expected position 0, got %d", task.Position())
+	}
+
+	// Status should change to RootWorkItem
+	if task.Status() != StatusRootWorkItem {
+		t.Errorf("expected status %v, got %v", StatusRootWorkItem, task.Status())
+	}
+}
+
+func TestTask_Move_FromRoot(t *testing.T) {
+	task, err := NewTask("Root task", nil, 0)
+	if err != nil {
+		t.Fatalf("failed to create task: %v", err)
+	}
+
+	// Verify initial status is RootWorkItem
+	if task.Status() != StatusRootWorkItem {
+		t.Fatalf("expected initial status %v, got %v", StatusRootWorkItem, task.Status())
+	}
+
+	// Move from root to child
+	parentID := NewTaskID()
+	err = task.Move(&parentID, 1)
+	if err != nil {
+		t.Errorf("expected no error for move from root, got %v", err)
+	}
+
+	if task.ParentID() == nil || !task.ParentID().Equals(parentID) {
+		t.Errorf("expected parent ID %v, got %v", parentID, task.ParentID())
+	}
+
+	// Status should change from RootWorkItem to TODO
+	if task.Status() != StatusTODO {
+		t.Errorf("expected status %v after moving from root, got %v", StatusTODO, task.Status())
+	}
+}
+
+func TestTask_Move_NegativePosition(t *testing.T) {
+	parentID := NewTaskID()
+	task, err := NewTask("Test task", &parentID, 2)
+	if err != nil {
+		t.Fatalf("failed to create task: %v", err)
+	}
+
+	initialParentID := task.ParentID()
+	initialPosition := task.Position()
+
+	newParentID := NewTaskID()
+	err = task.Move(&newParentID, -1)
+
+	if err == nil {
+		t.Error("expected error for negative position, got nil")
+	}
+
+	// Check that it's a ValidationError
+	if _, ok := err.(ValidationError); !ok {
+		t.Errorf("expected ValidationError, got %T", err)
+	}
+
+	// Verify task state didn't change
+	if task.ParentID() == nil || !task.ParentID().Equals(*initialParentID) {
+		t.Errorf("expected parent ID to remain %v after failed move, got %v", initialParentID, task.ParentID())
+	}
+
+	if task.Position() != initialPosition {
+		t.Errorf("expected position to remain %d after failed move, got %d", initialPosition, task.Position())
+	}
+}
+
+func TestTask_Move_SameParentAndPosition(t *testing.T) {
+	parentID := NewTaskID()
+	position := 3
+	task, err := NewTask("Test task", &parentID, position)
+	if err != nil {
+		t.Fatalf("failed to create task: %v", err)
+	}
+
+	// Move to same parent and position (no-op)
+	err = task.Move(&parentID, position)
+	if err != nil {
+		t.Errorf("expected no error for move to same location, got %v", err)
+	}
+
+	if task.ParentID() == nil || !task.ParentID().Equals(parentID) {
+		t.Errorf("expected parent ID %v, got %v", parentID, task.ParentID())
+	}
+
+	if task.Position() != position {
+		t.Errorf("expected position %d, got %d", position, task.Position())
+	}
+}

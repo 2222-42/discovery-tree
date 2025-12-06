@@ -111,3 +111,141 @@ func (s *TaskService) ChangeTaskStatus(taskID TaskID, newStatus Status) error {
 
 	return nil
 }
+
+// MoveTask moves a task to a new parent and position
+// Handles position adjustments for both old and new siblings
+// Validates the move operation (prevents cycles)
+// The entire subtree moves with the task
+func (s *TaskService) MoveTask(taskID TaskID, newParentID *TaskID, newPosition int) error {
+	// Retrieve the task being moved
+	task, err := s.repo.FindByID(taskID)
+	if err != nil {
+		return err
+	}
+
+	// Validate the move operation (cycle detection, parent exists, etc.)
+	err = s.validator.ValidateMove(taskID, newParentID, newPosition)
+	if err != nil {
+		return err
+	}
+
+	oldParentID := task.ParentID()
+	oldPosition := task.Position()
+
+	// Check if this is actually a move (parent or position changed)
+	isSameParent := (oldParentID == nil && newParentID == nil) ||
+		(oldParentID != nil && newParentID != nil && oldParentID.Equals(*newParentID))
+
+	if isSameParent && oldPosition == newPosition {
+		// No actual move needed
+		return nil
+	}
+
+	if !isSameParent {
+		// Moving to a different parent
+		
+		// Step 1: Adjust positions of old siblings (close the gap)
+		oldSiblings, err := s.repo.FindByParentID(oldParentID)
+		if err != nil {
+			return err
+		}
+
+		for _, sibling := range oldSiblings {
+			// Skip the task being moved
+			if sibling.ID().Equals(taskID) {
+				continue
+			}
+
+			// Shift left siblings that are to the right of the old position
+			if sibling.Position() > oldPosition {
+				err = sibling.Move(sibling.ParentID(), sibling.Position()-1)
+				if err != nil {
+					return err
+				}
+				err = s.repo.Save(sibling)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+		// Step 2: Adjust positions of new siblings (make room)
+		newSiblings, err := s.repo.FindByParentID(newParentID)
+		if err != nil {
+			return err
+		}
+
+		for _, sibling := range newSiblings {
+			// Shift right siblings that are at or after the new position
+			if sibling.Position() >= newPosition {
+				err = sibling.Move(sibling.ParentID(), sibling.Position()+1)
+				if err != nil {
+					return err
+				}
+				err = s.repo.Save(sibling)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	} else {
+		// Moving within the same parent (reordering)
+		siblings, err := s.repo.FindByParentID(newParentID)
+		if err != nil {
+			return err
+		}
+
+		if newPosition > oldPosition {
+			// Moving right: shift siblings between old and new position left
+			for _, sibling := range siblings {
+				if sibling.ID().Equals(taskID) {
+					continue
+				}
+				if sibling.Position() > oldPosition && sibling.Position() <= newPosition {
+					err = sibling.Move(sibling.ParentID(), sibling.Position()-1)
+					if err != nil {
+						return err
+					}
+					err = s.repo.Save(sibling)
+					if err != nil {
+						return err
+					}
+				}
+			}
+		} else {
+			// Moving left: shift siblings between new and old position right
+			for _, sibling := range siblings {
+				if sibling.ID().Equals(taskID) {
+					continue
+				}
+				if sibling.Position() >= newPosition && sibling.Position() < oldPosition {
+					err = sibling.Move(sibling.ParentID(), sibling.Position()+1)
+					if err != nil {
+						return err
+					}
+					err = s.repo.Save(sibling)
+					if err != nil {
+						return err
+					}
+				}
+			}
+		}
+	}
+
+	// Step 3: Move the task itself
+	err = task.Move(newParentID, newPosition)
+	if err != nil {
+		return err
+	}
+
+	err = s.repo.Save(task)
+	if err != nil {
+		return err
+	}
+
+	// Note: The subtree automatically moves with the task because
+	// child tasks reference their parent by ID, and we're not changing
+	// the task's ID, only its parent and position
+
+	return nil
+}
