@@ -138,10 +138,14 @@ func (t *Task) Move(newParentID *TaskID, newPosition int) error {
 
 	// Update status if moving to/from root
 	if newParentID == nil {
-		t.status = StatusRootWorkItem
+		if err := t.ChangeStatus(StatusRootWorkItem); err != nil {
+			return err
+		}
 	} else if t.status == StatusRootWorkItem {
 		// If moving from root to non-root, change status to TODO
-		t.status = StatusTODO
+		if err := t.ChangeStatus(StatusTODO); err != nil {
+			return err
+		}
 	}
 
 	return nil

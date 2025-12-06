@@ -243,9 +243,9 @@ func (s *TaskService) MoveTask(taskID TaskID, newParentID *TaskID, newPosition i
 		return err
 	}
 
-	// Note: The subtree automatically moves with the task because
-	// child tasks reference their parent by ID, and we're not changing
-	// the task's ID, only its parent and position
+	// Note: In this in-memory implementation, no explicit subtree traversal is needed when moving a task.
+	// Child tasks reference their parent by ID, so when a task's parent or position changes,
+	// its subtree remains attached via these references; only the parent and position are updated.
 
 	return nil
 }

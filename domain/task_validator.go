@@ -118,7 +118,7 @@ func (v *taskValidator) ValidateMove(taskID TaskID, newParentID *TaskID, newPosi
 	// If moving within the same parent, max position is len(siblings) - 1
 	// If moving to a different parent, max position is len(siblings)
 	maxPosition := len(siblings)
-	if task.ParentID() != nil && newParent.ID().Equals(*task.ParentID()) {
+	if task.ParentID() != nil && task.ParentID().Equals(newParent.ID()) {
 		maxPosition = len(siblings) - 1
 	}
 
