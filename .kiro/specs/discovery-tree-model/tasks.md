@@ -17,7 +17,7 @@
   - **Property 1: Root task creation with valid description**
   - **Validates: Requirements 1.1, 1.3**
 
-- [ ] 3. Implement Status value object
+- [x] 3. Implement Status value object
   - Create Status type with constants (TODO, InProgress, DONE, Blocked, RootWorkItem)
   - Implement NewStatus() with validation
   - Implement String() and IsValid() methods
@@ -27,7 +27,7 @@
   - **Property 9: Invalid status rejection**
   - **Validates: Requirements 3.2**
 
-- [ ] 4. Implement Task entity (aggregate root)
+- [x] 4. Implement Task entity (aggregate root)
   - Create Task struct with all fields (id, description, status, parentID, position, timestamps)
   - Implement NewTask() constructor with validation
   - Implement getter methods (ID, Status, ParentID, Position, Description)
@@ -42,7 +42,7 @@
   - **Property 2: Invalid description rejection**
   - **Validates: Requirements 1.2**
 
-- [ ] 5. Implement basic status change functionality
+- [x] 5. Implement basic status change functionality
   - Add ChangeStatus() method to Task entity
   - Implement basic status validation
   - Add UpdateDescription() method with validation
@@ -56,7 +56,7 @@
   - **Property 10: DONE status recording**
   - **Validates: Requirements 3.3**
 
-- [ ] 6. Implement TaskRepository interface
+- [x] 6. Implement TaskRepository interface
   - Define repository interface with all methods (Save, FindByID, FindByParentID, FindRoot, FindAll, Delete, DeleteSubtree)
   - Create in-memory implementation for testing
   - _Requirements: 10.4_
