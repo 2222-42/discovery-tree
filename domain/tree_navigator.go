@@ -20,6 +20,9 @@ type TreeNavigator interface {
 	// GetRoot returns the root task of the tree
 	GetRoot() (*Task, error)
 
+	// GetTree returns the complete tree structure (root task and all descendants)
+	GetTree() ([]*Task, error)
+
 	// GetSubtree returns the given task and all its descendants
 	GetSubtree(taskID TaskID) ([]*Task, error)
 }
@@ -152,6 +155,18 @@ func (s *TreeNavigatorService) GetRightSibling(taskID TaskID) (*Task, error) {
 // GetRoot returns the root task of the tree
 func (s *TreeNavigatorService) GetRoot() (*Task, error) {
 	return s.repo.FindRoot()
+}
+
+// GetTree returns the complete tree structure (root task and all descendants)
+func (s *TreeNavigatorService) GetTree() ([]*Task, error) {
+	// Get the root task
+	root, err := s.repo.FindRoot()
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the subtree starting from the root (which is the entire tree)
+	return s.GetSubtree(root.ID())
 }
 
 // GetSubtree returns the given task and all its descendants
