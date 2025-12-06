@@ -2,4 +2,7 @@ module discovery-tree
 
 go 1.25
 
-require github.com/google/uuid v1.6.0 // indirect
+require (
+	github.com/google/uuid v1.6.0 // indirect
+	github.com/leanovate/gopter v0.2.11 // indirect
+)

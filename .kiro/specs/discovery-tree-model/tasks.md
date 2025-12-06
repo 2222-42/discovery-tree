@@ -221,7 +221,7 @@
   - **Property 28: Cascading deletion**
   - **Validates: Requirements 9.2**
 
-- [ ] 17. Create property test generators
+- [x] 17. Create property test generators
   - Implement generator for valid descriptions
   - Implement generator for valid tree structures
   - Implement generator for status values
