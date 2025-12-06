@@ -61,7 +61,7 @@
   - Create in-memory implementation for testing
   - _Requirements: 10.4_
 
-- [ ] 7. Implement child task creation logic
+- [x] 7. Implement child task creation logic
   - Add logic to calculate position for new children
   - Implement validation for parent existence
   - Add support for creating child tasks with proper parent references
@@ -83,7 +83,7 @@
   - **Property 7: Non-existent parent rejection**
   - **Validates: Requirements 2.4**
 
-- [ ] 8. Implement single root constraint
+- [x] 8. Implement single root constraint
   - Add validation to prevent multiple root tasks
   - Update repository to check for existing root
   - _Requirements: 1.4_
