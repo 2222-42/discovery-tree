@@ -1018,3 +1018,336 @@ func TestTaskService_MoveTask_ComplexReordering(t *testing.T) {
 		}
 	}
 }
+
+func TestTaskService_DeleteTask_LeafTask(t *testing.T) {
+	repo := NewInMemoryTaskRepository()
+	service := NewTaskService(repo)
+
+	// Create parent with 3 children
+	parent, _ := service.CreateRootTask("Parent")
+	child1, _ := service.CreateChildTask("Child 1", parent.ID())
+	child2, _ := service.CreateChildTask("Child 2", parent.ID())
+	child3, _ := service.CreateChildTask("Child 3", parent.ID())
+
+	// Delete child2 (middle child)
+	err := service.DeleteTask(child2.ID())
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	// Verify child2 is deleted
+	_, err = repo.FindByID(child2.ID())
+	if err == nil {
+		t.Error("expected child2 to be deleted")
+	}
+	if _, ok := err.(NotFoundError); !ok {
+		t.Errorf("expected NotFoundError, got %T", err)
+	}
+
+	// Verify remaining children have adjusted positions
+	children, _ := repo.FindByParentID(&parent.id)
+	if len(children) != 2 {
+		t.Fatalf("expected 2 children, got %d", len(children))
+	}
+
+	// child1 should be at position 0, child3 should be at position 1
+	if !children[0].ID().Equals(child1.ID()) || children[0].Position() != 0 {
+		t.Errorf("expected child1 at position 0")
+	}
+	if !children[1].ID().Equals(child3.ID()) || children[1].Position() != 1 {
+		t.Errorf("expected child3 at position 1")
+	}
+}
+
+func TestTaskService_DeleteTask_FirstChild(t *testing.T) {
+	repo := NewInMemoryTaskRepository()
+	service := NewTaskService(repo)
+
+	// Create parent with 3 children
+	parent, _ := service.CreateRootTask("Parent")
+	child1, _ := service.CreateChildTask("Child 1", parent.ID())
+	child2, _ := service.CreateChildTask("Child 2", parent.ID())
+	child3, _ := service.CreateChildTask("Child 3", parent.ID())
+
+	// Delete child1 (first child)
+	err := service.DeleteTask(child1.ID())
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	// Verify remaining children have adjusted positions
+	children, _ := repo.FindByParentID(&parent.id)
+	if len(children) != 2 {
+		t.Fatalf("expected 2 children, got %d", len(children))
+	}
+
+	// child2 should be at position 0, child3 should be at position 1
+	if !children[0].ID().Equals(child2.ID()) || children[0].Position() != 0 {
+		t.Errorf("expected child2 at position 0")
+	}
+	if !children[1].ID().Equals(child3.ID()) || children[1].Position() != 1 {
+		t.Errorf("expected child3 at position 1")
+	}
+}
+
+func TestTaskService_DeleteTask_LastChild(t *testing.T) {
+	repo := NewInMemoryTaskRepository()
+	service := NewTaskService(repo)
+
+	// Create parent with 3 children
+	parent, _ := service.CreateRootTask("Parent")
+	child1, _ := service.CreateChildTask("Child 1", parent.ID())
+	child2, _ := service.CreateChildTask("Child 2", parent.ID())
+	child3, _ := service.CreateChildTask("Child 3", parent.ID())
+
+	// Delete child3 (last child)
+	err := service.DeleteTask(child3.ID())
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	// Verify remaining children positions unchanged
+	children, _ := repo.FindByParentID(&parent.id)
+	if len(children) != 2 {
+		t.Fatalf("expected 2 children, got %d", len(children))
+	}
+
+	// child1 should be at position 0, child2 should be at position 1
+	if !children[0].ID().Equals(child1.ID()) || children[0].Position() != 0 {
+		t.Errorf("expected child1 at position 0")
+	}
+	if !children[1].ID().Equals(child2.ID()) || children[1].Position() != 1 {
+		t.Errorf("expected child2 at position 1")
+	}
+}
+
+func TestTaskService_DeleteTask_WithChildren_CascadingDeletion(t *testing.T) {
+	repo := NewInMemoryTaskRepository()
+	service := NewTaskService(repo)
+
+	// Create tree: root -> parent -> child -> grandchild
+	root, _ := service.CreateRootTask("Root")
+	parent, _ := service.CreateChildTask("Parent", root.ID())
+	child, _ := service.CreateChildTask("Child", parent.ID())
+	grandchild, _ := service.CreateChildTask("Grandchild", child.ID())
+
+	// Delete parent (should cascade to child and grandchild)
+	err := service.DeleteTask(parent.ID())
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	// Verify parent is deleted
+	_, err = repo.FindByID(parent.ID())
+	if err == nil {
+		t.Error("expected parent to be deleted")
+	}
+
+	// Verify child is deleted
+	_, err = repo.FindByID(child.ID())
+	if err == nil {
+		t.Error("expected child to be deleted")
+	}
+
+	// Verify grandchild is deleted
+	_, err = repo.FindByID(grandchild.ID())
+	if err == nil {
+		t.Error("expected grandchild to be deleted")
+	}
+
+	// Verify root still exists
+	_, err = repo.FindByID(root.ID())
+	if err != nil {
+		t.Errorf("expected root to still exist, got error: %v", err)
+	}
+}
+
+func TestTaskService_DeleteTask_WithMultipleChildren(t *testing.T) {
+	repo := NewInMemoryTaskRepository()
+	service := NewTaskService(repo)
+
+	// Create tree: root -> parent -> child1
+	//                            -> child2
+	//                            -> child3
+	root, _ := service.CreateRootTask("Root")
+	parent, _ := service.CreateChildTask("Parent", root.ID())
+	child1, _ := service.CreateChildTask("Child 1", parent.ID())
+	child2, _ := service.CreateChildTask("Child 2", parent.ID())
+	child3, _ := service.CreateChildTask("Child 3", parent.ID())
+
+	// Delete parent (should cascade to all children)
+	err := service.DeleteTask(parent.ID())
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	// Verify all children are deleted
+	for _, childID := range []TaskID{child1.ID(), child2.ID(), child3.ID()} {
+		_, err = repo.FindByID(childID)
+		if err == nil {
+			t.Errorf("expected child %v to be deleted", childID)
+		}
+	}
+
+	// Verify root still exists
+	_, err = repo.FindByID(root.ID())
+	if err != nil {
+		t.Errorf("expected root to still exist, got error: %v", err)
+	}
+}
+
+func TestTaskService_DeleteTask_RootTask_DeletesEntireTree(t *testing.T) {
+	repo := NewInMemoryTaskRepository()
+	service := NewTaskService(repo)
+
+	// Create tree: root -> child1 -> grandchild1
+	//                   -> child2 -> grandchild2
+	root, _ := service.CreateRootTask("Root")
+	child1, _ := service.CreateChildTask("Child 1", root.ID())
+	child2, _ := service.CreateChildTask("Child 2", root.ID())
+	grandchild1, _ := service.CreateChildTask("Grandchild 1", child1.ID())
+	grandchild2, _ := service.CreateChildTask("Grandchild 2", child2.ID())
+
+	// Delete root (should delete entire tree)
+	err := service.DeleteTask(root.ID())
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	// Verify all tasks are deleted
+	allTaskIDs := []TaskID{root.ID(), child1.ID(), child2.ID(), grandchild1.ID(), grandchild2.ID()}
+	for _, taskID := range allTaskIDs {
+		_, err = repo.FindByID(taskID)
+		if err == nil {
+			t.Errorf("expected task %v to be deleted", taskID)
+		}
+		if _, ok := err.(NotFoundError); !ok {
+			t.Errorf("expected NotFoundError for task %v, got %T", taskID, err)
+		}
+	}
+
+	// Verify repository is empty
+	allTasks, _ := repo.FindAll()
+	if len(allTasks) != 0 {
+		t.Errorf("expected repository to be empty, got %d tasks", len(allTasks))
+	}
+}
+
+func TestTaskService_DeleteTask_NonExistentTask(t *testing.T) {
+	repo := NewInMemoryTaskRepository()
+	service := NewTaskService(repo)
+
+	nonExistentID := NewTaskID()
+	err := service.DeleteTask(nonExistentID)
+
+	if err == nil {
+		t.Fatal("expected error for non-existent task, got nil")
+	}
+
+	if _, ok := err.(NotFoundError); !ok {
+		t.Errorf("expected NotFoundError, got %T", err)
+	}
+}
+
+func TestTaskService_DeleteTask_PositionAdjustmentWithMultipleDeletions(t *testing.T) {
+	repo := NewInMemoryTaskRepository()
+	service := NewTaskService(repo)
+
+	// Create parent with 5 children
+	parent, _ := service.CreateRootTask("Parent")
+	child1, _ := service.CreateChildTask("Child 1", parent.ID())
+	child2, _ := service.CreateChildTask("Child 2", parent.ID())
+	child3, _ := service.CreateChildTask("Child 3", parent.ID())
+	child4, _ := service.CreateChildTask("Child 4", parent.ID())
+	child5, _ := service.CreateChildTask("Child 5", parent.ID())
+
+	// Delete child2
+	err := service.DeleteTask(child2.ID())
+	if err != nil {
+		t.Fatalf("failed to delete child2: %v", err)
+	}
+
+	// Verify positions: child1(0), child3(1), child4(2), child5(3)
+	children, _ := repo.FindByParentID(&parent.id)
+	if len(children) != 4 {
+		t.Fatalf("expected 4 children after first deletion, got %d", len(children))
+	}
+
+	// Delete child4
+	err = service.DeleteTask(child4.ID())
+	if err != nil {
+		t.Fatalf("failed to delete child4: %v", err)
+	}
+
+	// Verify positions: child1(0), child3(1), child5(2)
+	children, _ = repo.FindByParentID(&parent.id)
+	if len(children) != 3 {
+		t.Fatalf("expected 3 children after second deletion, got %d", len(children))
+	}
+
+	expectedOrder := []TaskID{child1.ID(), child3.ID(), child5.ID()}
+	for i, expected := range expectedOrder {
+		if !children[i].ID().Equals(expected) {
+			t.Errorf("position %d: expected %v, got %v", i, expected, children[i].ID())
+		}
+		if children[i].Position() != i {
+			t.Errorf("child at index %d has wrong position: expected %d, got %d", i, i, children[i].Position())
+		}
+	}
+}
+
+func TestTaskService_DeleteTask_SubtreeWithSiblingAdjustment(t *testing.T) {
+	repo := NewInMemoryTaskRepository()
+	service := NewTaskService(repo)
+
+	// Create tree: root -> parent1 -> child1
+	//                   -> parent2 -> child2
+	//                   -> parent3 -> child3
+	root, _ := service.CreateRootTask("Root")
+	parent1, _ := service.CreateChildTask("Parent 1", root.ID())
+	parent2, _ := service.CreateChildTask("Parent 2", root.ID())
+	parent3, _ := service.CreateChildTask("Parent 3", root.ID())
+	child1, _ := service.CreateChildTask("Child 1", parent1.ID())
+	child2, _ := service.CreateChildTask("Child 2", parent2.ID())
+	child3, _ := service.CreateChildTask("Child 3", parent3.ID())
+
+	// Delete parent2 and its subtree
+	err := service.DeleteTask(parent2.ID())
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	// Verify parent2 and child2 are deleted
+	_, err = repo.FindByID(parent2.ID())
+	if err == nil {
+		t.Error("expected parent2 to be deleted")
+	}
+	_, err = repo.FindByID(child2.ID())
+	if err == nil {
+		t.Error("expected child2 to be deleted")
+	}
+
+	// Verify remaining parents have adjusted positions
+	children, _ := repo.FindByParentID(&root.id)
+	if len(children) != 2 {
+		t.Fatalf("expected 2 children under root, got %d", len(children))
+	}
+
+	// parent1 should be at position 0, parent3 should be at position 1
+	if !children[0].ID().Equals(parent1.ID()) || children[0].Position() != 0 {
+		t.Errorf("expected parent1 at position 0")
+	}
+	if !children[1].ID().Equals(parent3.ID()) || children[1].Position() != 1 {
+		t.Errorf("expected parent3 at position 1")
+	}
+
+	// Verify child1 and child3 still exist under their parents
+	_, err = repo.FindByID(child1.ID())
+	if err != nil {
+		t.Errorf("expected child1 to still exist, got error: %v", err)
+	}
+	_, err = repo.FindByID(child3.ID())
+	if err != nil {
+		t.Errorf("expected child3 to still exist, got error: %v", err)
+	}
+}

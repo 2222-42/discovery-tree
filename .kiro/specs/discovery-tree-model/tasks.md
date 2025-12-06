@@ -206,7 +206,7 @@
   - **Property 26: Cycle prevention in moves**
   - **Validates: Requirements 8.4**
 
-- [ ] 16. Implement delete operations
+- [x] 16. Implement delete operations
   - Implement Delete() in repository for leaf tasks
   - Implement DeleteSubtree() for cascading deletion
   - Add position adjustment logic for remaining siblings

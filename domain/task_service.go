@@ -249,3 +249,121 @@ func (s *TaskService) MoveTask(taskID TaskID, newParentID *TaskID, newPosition i
 
 	return nil
 }
+
+// DeleteTask deletes a task and adjusts sibling positions
+// If the task has children, it performs cascading deletion
+// If the task is the root, it removes the entire tree
+func (s *TaskService) DeleteTask(taskID TaskID) error {
+	// Retrieve the task to be deleted
+	task, err := s.repo.FindByID(taskID)
+	if err != nil {
+		return err
+	}
+
+	// Check if this is the root task
+	if task.IsRoot() {
+		// Root deletion removes the entire tree
+		return s.deleteEntireTree()
+	}
+
+	// Check if the task has children
+	children, err := s.repo.FindByParentID(&taskID)
+	if err != nil {
+		return err
+	}
+
+	if len(children) > 0 {
+		// Task has children, perform cascading deletion
+		return s.deleteSubtree(taskID)
+	}
+
+	// Task is a leaf, delete it and adjust sibling positions
+	return s.deleteLeafTask(task)
+}
+
+// deleteLeafTask deletes a leaf task (no children) and adjusts sibling positions
+func (s *TaskService) deleteLeafTask(task *Task) error {
+	parentID := task.ParentID()
+	position := task.Position()
+	taskID := task.ID()
+
+	// Delete the task
+	err := s.repo.Delete(taskID)
+	if err != nil {
+		return err
+	}
+
+	// Adjust positions of right siblings (shift them left)
+	siblings, err := s.repo.FindByParentID(parentID)
+	if err != nil {
+		return err
+	}
+
+	for _, sibling := range siblings {
+		// Shift left siblings that were to the right of the deleted task
+		if sibling.Position() > position {
+			err = sibling.Move(sibling.ParentID(), sibling.Position()-1)
+			if err != nil {
+				return err
+			}
+			err = s.repo.Save(sibling)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// deleteSubtree deletes a task and all its descendants, then adjusts sibling positions
+func (s *TaskService) deleteSubtree(taskID TaskID) error {
+	// Retrieve the task to get its parent and position
+	task, err := s.repo.FindByID(taskID)
+	if err != nil {
+		return err
+	}
+
+	parentID := task.ParentID()
+	position := task.Position()
+
+	// Delete the task and all its descendants using repository's DeleteSubtree
+	err = s.repo.DeleteSubtree(taskID)
+	if err != nil {
+		return err
+	}
+
+	// Adjust positions of right siblings (shift them left)
+	siblings, err := s.repo.FindByParentID(parentID)
+	if err != nil {
+		return err
+	}
+
+	for _, sibling := range siblings {
+		// Shift left siblings that were to the right of the deleted task
+		if sibling.Position() > position {
+			err = sibling.Move(sibling.ParentID(), sibling.Position()-1)
+			if err != nil {
+				return err
+			}
+			err = s.repo.Save(sibling)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// deleteEntireTree deletes all tasks in the tree
+func (s *TaskService) deleteEntireTree() error {
+	// Find the root task
+	root, err := s.repo.FindRoot()
+	if err != nil {
+		return err
+	}
+
+	// Delete the root and all its descendants
+	return s.repo.DeleteSubtree(root.ID())
+}
