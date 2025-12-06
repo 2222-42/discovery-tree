@@ -83,15 +83,15 @@ func (s *TaskService) CreateChildTask(description string, parentID TaskID) (*Tas
 // Enforces bottom-to-top completion: a task can only be marked DONE if all children are DONE
 // Non-DONE statuses are allowed regardless of children status
 func (s *TaskService) ChangeTaskStatus(taskID TaskID, newStatus Status) error {
-	// First, validate the status change using the validator
-	// This enforces bottom-to-top completion for DONE status
-	err := s.validator.ValidateStatusChange(taskID, newStatus)
+	// Retrieve the task first
+	task, err := s.repo.FindByID(taskID)
 	if err != nil {
 		return err
 	}
 
-	// Retrieve the task
-	task, err := s.repo.FindByID(taskID)
+	// Validate the status change using the validator
+	// This enforces bottom-to-top completion for DONE status
+	err = s.validator.ValidateStatusChange(task, newStatus)
 	if err != nil {
 		return err
 	}

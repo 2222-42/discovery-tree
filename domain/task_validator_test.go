@@ -26,7 +26,7 @@ func TestTaskValidator_ValidateStatusChange_NonDONEStatuses(t *testing.T) {
 
 	for _, status := range nonDoneStatuses {
 		t.Run("Allow_"+status.String(), func(t *testing.T) {
-			err := validator.ValidateStatusChange(parent.ID(), status)
+			err := validator.ValidateStatusChange(parent, status)
 			if err != nil {
 				t.Errorf("Expected non-DONE status %s to be allowed, but got error: %v", status.String(), err)
 			}
@@ -52,7 +52,7 @@ func TestTaskValidator_ValidateStatusChange_DONEWithIncompleteChildren(t *testin
 	repo.Save(child2)
 
 	// Test that DONE status is rejected when children are not all DONE
-	err := validator.ValidateStatusChange(parent.ID(), StatusDONE)
+	err := validator.ValidateStatusChange(parent, StatusDONE)
 	if err == nil {
 		t.Error("Expected error when marking parent as DONE with incomplete children, but got nil")
 	}
@@ -81,7 +81,7 @@ func TestTaskValidator_ValidateStatusChange_DONEWithAllChildrenDone(t *testing.T
 	repo.Save(child2)
 
 	// Test that DONE status is allowed when all children are DONE
-	err := validator.ValidateStatusChange(parent.ID(), StatusDONE)
+	err := validator.ValidateStatusChange(parent, StatusDONE)
 	if err != nil {
 		t.Errorf("Expected DONE status to be allowed when all children are DONE, but got error: %v", err)
 	}
@@ -97,31 +97,15 @@ func TestTaskValidator_ValidateStatusChange_DONEWithNoChildren(t *testing.T) {
 	repo.Save(leaf)
 
 	// Test that DONE status is allowed for tasks with no children
-	err := validator.ValidateStatusChange(leaf.ID(), StatusDONE)
+	err := validator.ValidateStatusChange(leaf, StatusDONE)
 	if err != nil {
 		t.Errorf("Expected DONE status to be allowed for leaf task, but got error: %v", err)
 	}
 }
 
-func TestTaskValidator_ValidateStatusChange_TaskNotFound(t *testing.T) {
-	// Setup
-	repo := NewInMemoryTaskRepository()
-	validator := NewTaskValidator(repo)
-
-	// Create a non-existent task ID
-	nonExistentID := NewTaskID()
-
-	// Test that validation returns an error for non-existent task
-	err := validator.ValidateStatusChange(nonExistentID, StatusDONE)
-	if err == nil {
-		t.Error("Expected error when validating status change for non-existent task, but got nil")
-	}
-
-	// Verify it's a NotFoundError
-	if _, ok := err.(NotFoundError); !ok {
-		t.Errorf("Expected NotFoundError, but got: %T", err)
-	}
-}
+// TestTaskValidator_ValidateStatusChange_TaskNotFound is no longer needed
+// since the validator now receives a Task object instead of TaskID.
+// The task lookup is now done in the service layer before calling the validator.
 
 func TestTaskValidator_ValidateStatusChange_MultiLevelTree(t *testing.T) {
 	// Setup
@@ -148,13 +132,13 @@ func TestTaskValidator_ValidateStatusChange_MultiLevelTree(t *testing.T) {
 	repo.Save(parent2)
 
 	// Test that parent1 can be marked DONE (all its children are DONE)
-	err := validator.ValidateStatusChange(parent1.ID(), StatusDONE)
+	err := validator.ValidateStatusChange(parent1, StatusDONE)
 	if err != nil {
 		t.Errorf("Expected parent1 to be markable as DONE, but got error: %v", err)
 	}
 
 	// Test that root cannot be marked DONE (parent2 is not DONE)
-	err = validator.ValidateStatusChange(root.ID(), StatusDONE)
+	err = validator.ValidateStatusChange(root, StatusDONE)
 	if err == nil {
 		t.Error("Expected error when marking root as DONE with incomplete children, but got nil")
 	}

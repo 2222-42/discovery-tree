@@ -4,7 +4,7 @@ package domain
 type TaskValidator interface {
 	// ValidateStatusChange validates whether a status change is allowed
 	// Returns an error if the status change violates business rules
-	ValidateStatusChange(taskID TaskID, newStatus Status) error
+	ValidateStatusChange(task *Task, newStatus Status) error
 
 	// ValidateMove validates whether a move operation is allowed
 	// Returns an error if the move would create a cycle or violate constraints
@@ -30,7 +30,7 @@ func NewTaskValidator(repo TaskRepository) TaskValidator {
 // ValidateStatusChange validates whether a status change is allowed
 // Enforces bottom-to-top completion: a task can only be marked DONE if all children are DONE
 // Non-DONE statuses are allowed regardless of children status
-func (v *taskValidator) ValidateStatusChange(taskID TaskID, newStatus Status) error {
+func (v *taskValidator) ValidateStatusChange(task *Task, newStatus Status) error {
 	// Only enforce constraints when changing to DONE status
 	if newStatus != StatusDONE {
 		// Non-DONE statuses (TODO, In Progress, Blocked, Root Work Item) are always allowed
@@ -38,11 +38,6 @@ func (v *taskValidator) ValidateStatusChange(taskID TaskID, newStatus Status) er
 	}
 
 	// For DONE status, check that all children are DONE
-	task, err := v.repo.FindByID(taskID)
-	if err != nil {
-		return err
-	}
-
 	// Get all children of this task
 	children, err := v.repo.FindByParentID(&task.id)
 	if err != nil {
