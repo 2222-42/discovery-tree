@@ -158,7 +158,7 @@
   - **Property 15: Non-DONE statuses ignore children**
   - **Validates: Requirements 5.3**
 
-- [ ] 13. Integrate validation into Task.ChangeStatus()
+- [x] 13. Integrate validation into Task.ChangeStatus()
   - Update ChangeStatus() to use TaskValidator
   - Ensure bottom-to-top enforcement is applied
   - Maintain flexibility for non-DONE statuses

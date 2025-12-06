@@ -2,13 +2,15 @@ package domain
 
 // TaskService provides domain logic for task operations that require repository access
 type TaskService struct {
-	repo TaskRepository
+	repo      TaskRepository
+	validator TaskValidator
 }
 
 // NewTaskService creates a new TaskService
 func NewTaskService(repo TaskRepository) *TaskService {
 	return &TaskService{
-		repo: repo,
+		repo:      repo,
+		validator: NewTaskValidator(repo),
 	}
 }
 
@@ -75,4 +77,37 @@ func (s *TaskService) CreateChildTask(description string, parentID TaskID) (*Tas
 	}
 
 	return task, nil
+}
+
+// ChangeTaskStatus changes the status of a task with validation
+// Enforces bottom-to-top completion: a task can only be marked DONE if all children are DONE
+// Non-DONE statuses are allowed regardless of children status
+func (s *TaskService) ChangeTaskStatus(taskID TaskID, newStatus Status) error {
+	// First, validate the status change using the validator
+	// This enforces bottom-to-top completion for DONE status
+	err := s.validator.ValidateStatusChange(taskID, newStatus)
+	if err != nil {
+		return err
+	}
+
+	// Retrieve the task
+	task, err := s.repo.FindByID(taskID)
+	if err != nil {
+		return err
+	}
+
+	// Change the status on the task entity
+	// This performs basic validation (checking if status is valid)
+	err = task.ChangeStatus(newStatus)
+	if err != nil {
+		return err
+	}
+
+	// Save the updated task
+	err = s.repo.Save(task)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
