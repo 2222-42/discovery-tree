@@ -1,0 +1,358 @@
+package domain
+
+import (
+	"strings"
+	"testing"
+)
+
+func TestTaskService_CreateRootTask_Success(t *testing.T) {
+	repo := NewInMemoryTaskRepository()
+	service := NewTaskService(repo)
+
+	description := "Root task"
+	task, err := service.CreateRootTask(description)
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if task == nil {
+		t.Fatal("expected task to be created, got nil")
+	}
+
+	if task.Description() != description {
+		t.Errorf("expected description %q, got %q", description, task.Description())
+	}
+
+	if task.Status() != StatusRootWorkItem {
+		t.Errorf("expected status %v, got %v", StatusRootWorkItem, task.Status())
+	}
+
+	if task.ParentID() != nil {
+		t.Errorf("expected nil parent ID for root task, got %v", task.ParentID())
+	}
+
+	if task.Position() != 0 {
+		t.Errorf("expected position 0, got %d", task.Position())
+	}
+
+	// Verify task was saved to repository
+	retrieved, err := repo.FindByID(task.ID())
+	if err != nil {
+		t.Errorf("task not found in repository: %v", err)
+	}
+	if !retrieved.ID().Equals(task.ID()) {
+		t.Error("retrieved task ID does not match")
+	}
+}
+
+func TestTaskService_CreateRootTask_SingleRootConstraint(t *testing.T) {
+	repo := NewInMemoryTaskRepository()
+	service := NewTaskService(repo)
+
+	// Create first root task
+	_, err := service.CreateRootTask("First root")
+	if err != nil {
+		t.Fatalf("failed to create first root task: %v", err)
+	}
+
+	// Attempt to create second root task
+	_, err = service.CreateRootTask("Second root")
+	if err == nil {
+		t.Fatal("expected error when creating second root task, got nil")
+	}
+
+	// Check that it's a ConstraintViolationError
+	if _, ok := err.(ConstraintViolationError); !ok {
+		t.Errorf("expected ConstraintViolationError, got %T", err)
+	}
+
+	// Check error message mentions root
+	if !strings.Contains(err.Error(), "root") {
+		t.Errorf("expected error message to mention 'root', got %q", err.Error())
+	}
+}
+
+func TestTaskService_CreateRootTask_EmptyDescription(t *testing.T) {
+	repo := NewInMemoryTaskRepository()
+	service := NewTaskService(repo)
+
+	task, err := service.CreateRootTask("")
+	if err == nil {
+		t.Error("expected error for empty description, got nil")
+	}
+
+	if task != nil {
+		t.Errorf("expected nil task for invalid description, got %v", task)
+	}
+
+	// Check that it's a ValidationError
+	if _, ok := err.(ValidationError); !ok {
+		t.Errorf("expected ValidationError, got %T", err)
+	}
+}
+
+func TestTaskService_CreateChildTask_Success(t *testing.T) {
+	repo := NewInMemoryTaskRepository()
+	service := NewTaskService(repo)
+
+	// Create parent task
+	parent, err := service.CreateRootTask("Parent task")
+	if err != nil {
+		t.Fatalf("failed to create parent task: %v", err)
+	}
+
+	// Create child task
+	description := "Child task"
+	child, err := service.CreateChildTask(description, parent.ID())
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if child == nil {
+		t.Fatal("expected child task to be created, got nil")
+	}
+
+	if child.Description() != description {
+		t.Errorf("expected description %q, got %q", description, child.Description())
+	}
+
+	if child.Status() != StatusTODO {
+		t.Errorf("expected status %v, got %v", StatusTODO, child.Status())
+	}
+
+	if child.ParentID() == nil {
+		t.Fatal("expected non-nil parent ID for child task")
+	}
+
+	if !child.ParentID().Equals(parent.ID()) {
+		t.Errorf("expected parent ID %v, got %v", parent.ID(), *child.ParentID())
+	}
+
+	if child.Position() != 0 {
+		t.Errorf("expected position 0 for first child, got %d", child.Position())
+	}
+
+	// Verify task was saved to repository
+	retrieved, err := repo.FindByID(child.ID())
+	if err != nil {
+		t.Errorf("child task not found in repository: %v", err)
+	}
+	if !retrieved.ID().Equals(child.ID()) {
+		t.Error("retrieved child task ID does not match")
+	}
+}
+
+func TestTaskService_CreateChildTask_AutomaticPositionCalculation(t *testing.T) {
+	repo := NewInMemoryTaskRepository()
+	service := NewTaskService(repo)
+
+	// Create parent task
+	parent, err := service.CreateRootTask("Parent task")
+	if err != nil {
+		t.Fatalf("failed to create parent task: %v", err)
+	}
+
+	// Create multiple child tasks
+	child1, err := service.CreateChildTask("Child 1", parent.ID())
+	if err != nil {
+		t.Fatalf("failed to create child 1: %v", err)
+	}
+
+	child2, err := service.CreateChildTask("Child 2", parent.ID())
+	if err != nil {
+		t.Fatalf("failed to create child 2: %v", err)
+	}
+
+	child3, err := service.CreateChildTask("Child 3", parent.ID())
+	if err != nil {
+		t.Fatalf("failed to create child 3: %v", err)
+	}
+
+	// Verify positions are assigned sequentially
+	if child1.Position() != 0 {
+		t.Errorf("expected child1 position 0, got %d", child1.Position())
+	}
+
+	if child2.Position() != 1 {
+		t.Errorf("expected child2 position 1, got %d", child2.Position())
+	}
+
+	if child3.Position() != 2 {
+		t.Errorf("expected child3 position 2, got %d", child3.Position())
+	}
+
+	// Verify all children have the same parent
+	if !child1.ParentID().Equals(parent.ID()) {
+		t.Error("child1 has wrong parent ID")
+	}
+	if !child2.ParentID().Equals(parent.ID()) {
+		t.Error("child2 has wrong parent ID")
+	}
+	if !child3.ParentID().Equals(parent.ID()) {
+		t.Error("child3 has wrong parent ID")
+	}
+
+	// Verify children can be retrieved in order
+	parentID := parent.ID()
+	children, err := repo.FindByParentID(&parentID)
+	if err != nil {
+		t.Fatalf("failed to find children: %v", err)
+	}
+
+	if len(children) != 3 {
+		t.Errorf("expected 3 children, got %d", len(children))
+	}
+
+	// Verify ordering
+	if children[0].Position() != 0 || children[1].Position() != 1 || children[2].Position() != 2 {
+		t.Error("children not in correct order")
+	}
+}
+
+func TestTaskService_CreateChildTask_NonExistentParent(t *testing.T) {
+	repo := NewInMemoryTaskRepository()
+	service := NewTaskService(repo)
+
+	// Try to create child with non-existent parent
+	nonExistentParentID := NewTaskID()
+	child, err := service.CreateChildTask("Child task", nonExistentParentID)
+
+	if err == nil {
+		t.Fatal("expected error when creating child with non-existent parent, got nil")
+	}
+
+	if child != nil {
+		t.Errorf("expected nil task for non-existent parent, got %v", child)
+	}
+
+	// Check that it's a NotFoundError
+	if _, ok := err.(NotFoundError); !ok {
+		t.Errorf("expected NotFoundError, got %T", err)
+	}
+}
+
+func TestTaskService_CreateChildTask_EmptyDescription(t *testing.T) {
+	repo := NewInMemoryTaskRepository()
+	service := NewTaskService(repo)
+
+	// Create parent task
+	parent, err := service.CreateRootTask("Parent task")
+	if err != nil {
+		t.Fatalf("failed to create parent task: %v", err)
+	}
+
+	// Try to create child with empty description
+	child, err := service.CreateChildTask("", parent.ID())
+
+	if err == nil {
+		t.Error("expected error for empty description, got nil")
+	}
+
+	if child != nil {
+		t.Errorf("expected nil task for invalid description, got %v", child)
+	}
+
+	// Check that it's a ValidationError
+	if _, ok := err.(ValidationError); !ok {
+		t.Errorf("expected ValidationError, got %T", err)
+	}
+}
+
+func TestTaskService_CreateChildTask_NestedChildren(t *testing.T) {
+	repo := NewInMemoryTaskRepository()
+	service := NewTaskService(repo)
+
+	// Create root task
+	root, err := service.CreateRootTask("Root task")
+	if err != nil {
+		t.Fatalf("failed to create root task: %v", err)
+	}
+
+	// Create child of root
+	child, err := service.CreateChildTask("Child task", root.ID())
+	if err != nil {
+		t.Fatalf("failed to create child task: %v", err)
+	}
+
+	// Create grandchild (child of child)
+	grandchild, err := service.CreateChildTask("Grandchild task", child.ID())
+	if err != nil {
+		t.Fatalf("failed to create grandchild task: %v", err)
+	}
+
+	// Verify grandchild has correct parent and position
+	if !grandchild.ParentID().Equals(child.ID()) {
+		t.Errorf("expected grandchild parent ID %v, got %v", child.ID(), *grandchild.ParentID())
+	}
+
+	if grandchild.Position() != 0 {
+		t.Errorf("expected grandchild position 0, got %d", grandchild.Position())
+	}
+
+	// Verify child has correct parent
+	if !child.ParentID().Equals(root.ID()) {
+		t.Errorf("expected child parent ID %v, got %v", root.ID(), *child.ParentID())
+	}
+}
+
+func TestTaskService_CreateChildTask_MultipleParents(t *testing.T) {
+	repo := NewInMemoryTaskRepository()
+	service := NewTaskService(repo)
+
+	// Create root task
+	root, err := service.CreateRootTask("Root task")
+	if err != nil {
+		t.Fatalf("failed to create root task: %v", err)
+	}
+
+	// Create two children of root
+	child1, err := service.CreateChildTask("Child 1", root.ID())
+	if err != nil {
+		t.Fatalf("failed to create child 1: %v", err)
+	}
+
+	child2, err := service.CreateChildTask("Child 2", root.ID())
+	if err != nil {
+		t.Fatalf("failed to create child 2: %v", err)
+	}
+
+	// Create children under each child
+	grandchild1a, err := service.CreateChildTask("Grandchild 1a", child1.ID())
+	if err != nil {
+		t.Fatalf("failed to create grandchild 1a: %v", err)
+	}
+
+	grandchild1b, err := service.CreateChildTask("Grandchild 1b", child1.ID())
+	if err != nil {
+		t.Fatalf("failed to create grandchild 1b: %v", err)
+	}
+
+	grandchild2a, err := service.CreateChildTask("Grandchild 2a", child2.ID())
+	if err != nil {
+		t.Fatalf("failed to create grandchild 2a: %v", err)
+	}
+
+	// Verify positions are independent per parent
+	if grandchild1a.Position() != 0 {
+		t.Errorf("expected grandchild1a position 0, got %d", grandchild1a.Position())
+	}
+	if grandchild1b.Position() != 1 {
+		t.Errorf("expected grandchild1b position 1, got %d", grandchild1b.Position())
+	}
+	if grandchild2a.Position() != 0 {
+		t.Errorf("expected grandchild2a position 0, got %d", grandchild2a.Position())
+	}
+
+	// Verify parent references
+	if !grandchild1a.ParentID().Equals(child1.ID()) {
+		t.Error("grandchild1a has wrong parent")
+	}
+	if !grandchild1b.ParentID().Equals(child1.ID()) {
+		t.Error("grandchild1b has wrong parent")
+	}
+	if !grandchild2a.ParentID().Equals(child2.ID()) {
+		t.Error("grandchild2a has wrong parent")
+	}
+}
