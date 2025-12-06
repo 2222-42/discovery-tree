@@ -48,12 +48,9 @@ func (s *TaskService) CreateRootTask(description string) (*Task, error) {
 // Validates that the parent exists
 func (s *TaskService) CreateChildTask(description string, parentID TaskID) (*Task, error) {
 	// Validate that the parent exists
-	parent, err := s.repo.FindByID(parentID)
+	_, err := s.repo.FindByID(parentID)
 	if err != nil {
 		return nil, err
-	}
-	if parent == nil {
-		return nil, NewNotFoundError("Parent Task", parentID.String())
 	}
 
 	// Find existing children to calculate the next position

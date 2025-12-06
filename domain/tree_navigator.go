@@ -8,7 +8,7 @@ type TreeNavigator interface {
 	// GetChildren returns all child tasks of the given task, ordered by position (left-to-right)
 	GetChildren(taskID TaskID) ([]*Task, error)
 
-	// GetSiblings returns all tasks sharing the same parent as the given task, ordered by position
+	// GetSiblings returns all tasks sharing the same parent as the given task (including the task itself), ordered by position
 	GetSiblings(taskID TaskID) ([]*Task, error)
 
 	// GetLeftSibling returns the immediate left sibling of the given task, or nil if none exists

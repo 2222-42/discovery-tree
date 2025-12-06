@@ -195,7 +195,8 @@ func TestTaskService_CreateChildTask_AutomaticPositionCalculation(t *testing.T) 
 	}
 
 	// Verify children can be retrieved in order
-	children, err := repo.FindByParentID(&parent.id)
+	parentID := parent.ID()
+	children, err := repo.FindByParentID(&parentID)
 	if err != nil {
 		t.Fatalf("failed to find children: %v", err)
 	}

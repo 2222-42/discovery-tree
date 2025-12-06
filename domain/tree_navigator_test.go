@@ -26,7 +26,8 @@ func setupTreeNavigatorTest(t *testing.T) (*InMemoryTaskRepository, *TreeNavigat
 	}
 
 	// Create child tasks
-	child1, err := NewTask("Child 1", &root.id, 0)
+	rootID := root.ID()
+	child1, err := NewTask("Child 1", &rootID, 0)
 	if err != nil {
 		t.Fatalf("Failed to create child1: %v", err)
 	}
@@ -34,7 +35,7 @@ func setupTreeNavigatorTest(t *testing.T) (*InMemoryTaskRepository, *TreeNavigat
 		t.Fatalf("Failed to save child1: %v", err)
 	}
 
-	child2, err := NewTask("Child 2", &root.id, 1)
+	child2, err := NewTask("Child 2", &rootID, 1)
 	if err != nil {
 		t.Fatalf("Failed to create child2: %v", err)
 	}
@@ -42,7 +43,7 @@ func setupTreeNavigatorTest(t *testing.T) (*InMemoryTaskRepository, *TreeNavigat
 		t.Fatalf("Failed to save child2: %v", err)
 	}
 
-	child3, err := NewTask("Child 3", &root.id, 2)
+	child3, err := NewTask("Child 3", &rootID, 2)
 	if err != nil {
 		t.Fatalf("Failed to create child3: %v", err)
 	}
@@ -51,7 +52,8 @@ func setupTreeNavigatorTest(t *testing.T) (*InMemoryTaskRepository, *TreeNavigat
 	}
 
 	// Create grandchild tasks under child1
-	grandchild1, err := NewTask("Grandchild 1", &child1.id, 0)
+	child1ID := child1.ID()
+	grandchild1, err := NewTask("Grandchild 1", &child1ID, 0)
 	if err != nil {
 		t.Fatalf("Failed to create grandchild1: %v", err)
 	}
@@ -59,7 +61,7 @@ func setupTreeNavigatorTest(t *testing.T) (*InMemoryTaskRepository, *TreeNavigat
 		t.Fatalf("Failed to save grandchild1: %v", err)
 	}
 
-	grandchild2, err := NewTask("Grandchild 2", &child1.id, 1)
+	grandchild2, err := NewTask("Grandchild 2", &child1ID, 1)
 	if err != nil {
 		t.Fatalf("Failed to create grandchild2: %v", err)
 	}
