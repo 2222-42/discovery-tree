@@ -143,7 +143,7 @@
   - **Property 13: Readiness does not block status changes**
   - **Validates: Requirements 4.5**
 
-- [ ] 12. Implement TaskValidator domain service for bottom-to-top enforcement
+- [x] 12. Implement TaskValidator domain service for bottom-to-top enforcement
   - Create TaskValidator interface
   - Implement ValidateStatusChange() method
   - Add validation for DONE status requiring all children to be DONE
