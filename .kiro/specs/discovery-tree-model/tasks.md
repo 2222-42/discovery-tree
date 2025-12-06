@@ -118,12 +118,12 @@
   - **Property 22: Right sibling navigation**
   - **Validates: Requirements 7.5**
 
-- [ ] 10. Implement ReadinessState value object
+- [x] 10. Implement ReadinessState value object
   - Create ReadinessState struct with fields (isReady, leftSiblingComplete, allChildrenComplete, reasons)
   - Implement IsReady() and Reasons() methods
   - _Requirements: 4.1, 4.2_
 
-- [ ] 11. Implement ReadinessEvaluator domain service
+- [x] 11. Implement ReadinessEvaluator domain service
   - Create ReadinessEvaluator interface
   - Implement EvaluateReadiness() method
   - Check left sibling completion status
@@ -143,7 +143,7 @@
   - **Property 13: Readiness does not block status changes**
   - **Validates: Requirements 4.5**
 
-- [ ] 12. Implement TaskValidator domain service for bottom-to-top enforcement
+- [x] 12. Implement TaskValidator domain service for bottom-to-top enforcement
   - Create TaskValidator interface
   - Implement ValidateStatusChange() method
   - Add validation for DONE status requiring all children to be DONE
@@ -158,13 +158,13 @@
   - **Property 15: Non-DONE statuses ignore children**
   - **Validates: Requirements 5.3**
 
-- [ ] 13. Integrate validation into Task.ChangeStatus()
+- [x] 13. Integrate validation into Task.ChangeStatus()
   - Update ChangeStatus() to use TaskValidator
   - Ensure bottom-to-top enforcement is applied
   - Maintain flexibility for non-DONE statuses
   - _Requirements: 5.1, 5.3_
 
-- [ ] 14. Implement tree retrieval operations
+- [x] 14. Implement tree retrieval operations
   - Add GetTree() method to retrieve complete tree structure
   - Ensure parent-child relationships are preserved
   - Ensure left-to-right ordering is maintained

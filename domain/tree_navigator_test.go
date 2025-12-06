@@ -560,3 +560,148 @@ func TestTreeNavigator_GetSubtree_PreservesStructure(t *testing.T) {
 		}
 	}
 }
+
+func TestTreeNavigator_GetTree(t *testing.T) {
+	_, navigator, tasks := setupTreeNavigatorTest(t)
+
+	// Get the complete tree
+	tree, err := navigator.GetTree()
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	// Verify that all 6 tasks are included
+	if len(tree) != 6 {
+		t.Errorf("Expected tree with 6 tasks but got %d", len(tree))
+	}
+
+	// Verify the first task is the root
+	if !tree[0].ID().Equals(tasks["root"].ID()) {
+		t.Error("First task in tree should be the root task")
+	}
+
+	// Verify all tasks are present
+	taskIDs := make(map[string]bool)
+	for _, task := range tree {
+		taskIDs[task.ID().String()] = true
+	}
+
+	expectedTasks := []string{"root", "child1", "child2", "child3", "grandchild1", "grandchild2"}
+	for _, taskName := range expectedTasks {
+		if !taskIDs[tasks[taskName].ID().String()] {
+			t.Errorf("Tree should include %s", taskName)
+		}
+	}
+}
+
+func TestTreeNavigator_GetTree_PreservesParentChildRelationships(t *testing.T) {
+	_, navigator, tasks := setupTreeNavigatorTest(t)
+
+	// Get the complete tree
+	tree, err := navigator.GetTree()
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	// Build a map of tasks by ID for easy lookup
+	taskMap := make(map[string]*Task)
+	for _, task := range tree {
+		taskMap[task.ID().String()] = task
+	}
+
+	// Verify parent-child relationships
+	// Root should have no parent
+	root := taskMap[tasks["root"].ID().String()]
+	if root.ParentID() != nil {
+		t.Error("Root task should have no parent")
+	}
+
+	// Child1, Child2, Child3 should have root as parent
+	for _, childName := range []string{"child1", "child2", "child3"} {
+		child := taskMap[tasks[childName].ID().String()]
+		if child.ParentID() == nil {
+			t.Errorf("%s should have a parent", childName)
+		} else if !child.ParentID().Equals(tasks["root"].ID()) {
+			t.Errorf("%s parent should be root", childName)
+		}
+	}
+
+	// Grandchild1 and Grandchild2 should have child1 as parent
+	for _, grandchildName := range []string{"grandchild1", "grandchild2"} {
+		grandchild := taskMap[tasks[grandchildName].ID().String()]
+		if grandchild.ParentID() == nil {
+			t.Errorf("%s should have a parent", grandchildName)
+		} else if !grandchild.ParentID().Equals(tasks["child1"].ID()) {
+			t.Errorf("%s parent should be child1", grandchildName)
+		}
+	}
+}
+
+func TestTreeNavigator_GetTree_MaintainsLeftToRightOrdering(t *testing.T) {
+	_, navigator, tasks := setupTreeNavigatorTest(t)
+
+	// Get the complete tree
+	tree, err := navigator.GetTree()
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	// Build a map to track positions by parent
+	childrenByParent := make(map[string][]*Task)
+	for _, task := range tree {
+		if task.ParentID() != nil {
+			parentIDStr := task.ParentID().String()
+			childrenByParent[parentIDStr] = append(childrenByParent[parentIDStr], task)
+		}
+	}
+
+	// Verify that children are ordered by position
+	for parentID, children := range childrenByParent {
+		for i := 0; i < len(children)-1; i++ {
+			if children[i].Position() >= children[i+1].Position() {
+				t.Errorf("Children of parent %s are not properly ordered by position", parentID)
+			}
+		}
+	}
+
+	// Specifically verify root's children are in order: child1 (pos 0), child2 (pos 1), child3 (pos 2)
+	rootChildren := childrenByParent[tasks["root"].ID().String()]
+	if len(rootChildren) != 3 {
+		t.Fatalf("Expected 3 children of root but got %d", len(rootChildren))
+	}
+
+	// Note: The order in the tree slice may not be the same as position order
+	// We need to check that when we query children, they come back in position order
+	children, err := navigator.GetChildren(tasks["root"].ID())
+	if err != nil {
+		t.Fatalf("Unexpected error getting children: %v", err)
+	}
+
+	expectedDescriptions := []string{"Child 1", "Child 2", "Child 3"}
+	for i, child := range children {
+		if child.Description() != expectedDescriptions[i] {
+			t.Errorf("Expected child at position %d to be '%s' but got '%s'",
+				i, expectedDescriptions[i], child.Description())
+		}
+		if child.Position() != i {
+			t.Errorf("Expected child at index %d to have position %d but got %d",
+				i, i, child.Position())
+		}
+	}
+}
+
+func TestTreeNavigator_GetTree_EmptyTree(t *testing.T) {
+	repo := NewInMemoryTaskRepository()
+	navigator := NewTreeNavigatorService(repo)
+
+	// Try to get tree when no root exists
+	_, err := navigator.GetTree()
+	if err == nil {
+		t.Error("Expected error when getting tree with no root")
+	}
+
+	// Verify it's a NotFoundError
+	if _, ok := err.(NotFoundError); !ok {
+		t.Errorf("Expected NotFoundError but got %T", err)
+	}
+}
