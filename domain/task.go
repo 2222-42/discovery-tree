@@ -150,3 +150,26 @@ func (t *Task) Move(newParentID *TaskID, newPosition int) error {
 
 	return nil
 }
+
+// ReconstructTask creates a Task with all fields specified
+// This is used by the infrastructure layer to deserialize tasks from persistent storage
+// Unlike NewTask, this does not generate new IDs or timestamps
+func ReconstructTask(
+	id TaskID,
+	description string,
+	status Status,
+	parentID *TaskID,
+	position int,
+	createdAt time.Time,
+	updatedAt time.Time,
+) *Task {
+	return &Task{
+		id:          id,
+		description: description,
+		status:      status,
+		parentID:    parentID,
+		position:    position,
+		createdAt:   createdAt,
+		updatedAt:   updatedAt,
+	}
+}
