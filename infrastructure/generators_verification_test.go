@@ -95,7 +95,7 @@ func TestGenTaskTree_GeneratesValidTrees(t *testing.T) {
 				}
 			}
 
-			return !found
+			return found
 		},
 		GenTaskTree(),
 	))
