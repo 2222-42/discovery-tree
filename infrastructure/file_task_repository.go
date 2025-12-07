@@ -223,6 +223,43 @@ func (r *FileTaskRepository) Delete(id domain.TaskID) error {
 
 // DeleteSubtree removes a task and all its descendants
 func (r *FileTaskRepository) DeleteSubtree(id domain.TaskID) error {
-	// TODO: Implement in task 8
-	return nil
+	// Use write lock for thread safety
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	// Check if the task exists
+	idStr := id.String()
+	if _, exists := r.tasks[idStr]; !exists {
+		return domain.NewNotFoundError("Task", idStr)
+	}
+
+	// Collect all tasks to delete (the task and all its descendants)
+	toDelete := r.collectDescendants(id)
+	toDelete = append(toDelete, id)
+
+	// Delete all collected tasks from in-memory map
+	for _, taskID := range toDelete {
+		delete(r.tasks, taskID.String())
+	}
+
+	// Call persist() to write changes
+	return r.persist()
+}
+
+// collectDescendants recursively collects all descendant task IDs
+// Note: This method assumes the lock is already held by the caller
+func (r *FileTaskRepository) collectDescendants(parentID domain.TaskID) []domain.TaskID {
+	var descendants []domain.TaskID
+
+	// Find all direct children
+	for _, task := range r.tasks {
+		if task.ParentID() != nil && task.ParentID().Equals(parentID) {
+			descendants = append(descendants, task.ID())
+			// Recursively collect descendants of this child
+			childDescendants := r.collectDescendants(task.ID())
+			descendants = append(descendants, childDescendants...)
+		}
+	}
+
+	return descendants
 }

@@ -99,7 +99,7 @@
   - **Property 11: Delete removes task**
   - **Validates: Requirements 5.3**
 
-- [ ] 8. Implement DeleteSubtree method
+- [x] 8. Implement DeleteSubtree method
   - Implement `DeleteSubtree(id TaskID)` for cascading deletion
   - Find all descendants recursively using parent relationships
   - Remove task and all descendants from in-memory map

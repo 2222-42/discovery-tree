@@ -988,3 +988,188 @@ func TestDelete_DoesNotDeleteChildren(t *testing.T) {
 		t.Error("expected child2 to still exist")
 	}
 }
+
+// TestDeleteSubtree_ExistingTask tests deleting a task and all its descendants
+func TestDeleteSubtree_ExistingTask(t *testing.T) {
+	testPath := "./test_data/delete_subtree.json"
+	os.RemoveAll("./test_data")
+	defer os.RemoveAll("./test_data")
+
+	repo, _ := NewFileTaskRepository(testPath)
+	
+	// Create a tree: root -> child1 -> grandchild1, child2
+	root, _ := domain.NewTask("Root", nil, 0)
+	rootID := root.ID()
+	child1, _ := domain.NewTask("Child 1", &rootID, 0)
+	child1ID := child1.ID()
+	grandchild1, _ := domain.NewTask("Grandchild 1", &child1ID, 0)
+	child2, _ := domain.NewTask("Child 2", &rootID, 1)
+	
+	repo.Save(root)
+	repo.Save(child1)
+	repo.Save(grandchild1)
+	repo.Save(child2)
+
+	// Verify all tasks exist
+	if len(repo.tasks) != 4 {
+		t.Fatalf("expected 4 tasks before delete, got %d", len(repo.tasks))
+	}
+
+	// Delete child1 subtree (should delete child1 and grandchild1)
+	err := repo.DeleteSubtree(child1.ID())
+	if err != nil {
+		t.Fatalf("expected no error deleting subtree, got %v", err)
+	}
+
+	// Verify child1 and grandchild1 are removed, but root and child2 remain
+	if len(repo.tasks) != 2 {
+		t.Errorf("expected 2 tasks after delete, got %d", len(repo.tasks))
+	}
+
+	// Verify child1 is gone
+	_, err = repo.FindByID(child1.ID())
+	if err == nil {
+		t.Error("expected child1 to be deleted")
+	}
+
+	// Verify grandchild1 is gone
+	_, err = repo.FindByID(grandchild1.ID())
+	if err == nil {
+		t.Error("expected grandchild1 to be deleted")
+	}
+
+	// Verify root still exists
+	_, err = repo.FindByID(root.ID())
+	if err != nil {
+		t.Error("expected root to still exist")
+	}
+
+	// Verify child2 still exists
+	_, err = repo.FindByID(child2.ID())
+	if err != nil {
+		t.Error("expected child2 to still exist")
+	}
+
+	// Verify deletion was persisted to file
+	repo2, _ := NewFileTaskRepository(testPath)
+	if len(repo2.tasks) != 2 {
+		t.Errorf("expected 2 tasks in file after delete, got %d", len(repo2.tasks))
+	}
+}
+
+// TestDeleteSubtree_NonExistentTask tests deleting a non-existent task
+func TestDeleteSubtree_NonExistentTask(t *testing.T) {
+	testPath := "./test_data/delete_subtree_nonexistent.json"
+	os.RemoveAll("./test_data")
+	defer os.RemoveAll("./test_data")
+
+	repo, _ := NewFileTaskRepository(testPath)
+	
+	// Try to delete a non-existent task
+	nonExistentID := domain.NewTaskID()
+	err := repo.DeleteSubtree(nonExistentID)
+	
+	if err == nil {
+		t.Fatal("expected NotFoundError, got nil")
+	}
+
+	if _, ok := err.(domain.NotFoundError); !ok {
+		t.Errorf("expected NotFoundError, got %T", err)
+	}
+}
+
+// TestDeleteSubtree_LeafTask tests deleting a leaf task (no children)
+func TestDeleteSubtree_LeafTask(t *testing.T) {
+	testPath := "./test_data/delete_subtree_leaf.json"
+	os.RemoveAll("./test_data")
+	defer os.RemoveAll("./test_data")
+
+	repo, _ := NewFileTaskRepository(testPath)
+	
+	// Create a simple tree: root -> child
+	root, _ := domain.NewTask("Root", nil, 0)
+	rootID := root.ID()
+	child, _ := domain.NewTask("Child", &rootID, 0)
+	
+	repo.Save(root)
+	repo.Save(child)
+
+	// Delete leaf task (child)
+	err := repo.DeleteSubtree(child.ID())
+	if err != nil {
+		t.Fatalf("expected no error deleting leaf, got %v", err)
+	}
+
+	// Verify only child is removed
+	if len(repo.tasks) != 1 {
+		t.Errorf("expected 1 task after delete, got %d", len(repo.tasks))
+	}
+
+	// Verify child is gone
+	_, err = repo.FindByID(child.ID())
+	if err == nil {
+		t.Error("expected child to be deleted")
+	}
+
+	// Verify root still exists
+	_, err = repo.FindByID(root.ID())
+	if err != nil {
+		t.Error("expected root to still exist")
+	}
+}
+
+// TestDeleteSubtree_DeepTree tests deleting a deep tree
+func TestDeleteSubtree_DeepTree(t *testing.T) {
+	testPath := "./test_data/delete_subtree_deep.json"
+	os.RemoveAll("./test_data")
+	defer os.RemoveAll("./test_data")
+
+	repo, _ := NewFileTaskRepository(testPath)
+	
+	// Create a deep tree: root -> child -> grandchild -> great-grandchild
+	root, _ := domain.NewTask("Root", nil, 0)
+	rootID := root.ID()
+	child, _ := domain.NewTask("Child", &rootID, 0)
+	childID := child.ID()
+	grandchild, _ := domain.NewTask("Grandchild", &childID, 0)
+	grandchildID := grandchild.ID()
+	greatGrandchild, _ := domain.NewTask("Great-Grandchild", &grandchildID, 0)
+	
+	repo.Save(root)
+	repo.Save(child)
+	repo.Save(grandchild)
+	repo.Save(greatGrandchild)
+
+	// Delete child subtree (should delete child, grandchild, and great-grandchild)
+	err := repo.DeleteSubtree(child.ID())
+	if err != nil {
+		t.Fatalf("expected no error deleting subtree, got %v", err)
+	}
+
+	// Verify only root remains
+	if len(repo.tasks) != 1 {
+		t.Errorf("expected 1 task after delete, got %d", len(repo.tasks))
+	}
+
+	// Verify root still exists
+	_, err = repo.FindByID(root.ID())
+	if err != nil {
+		t.Error("expected root to still exist")
+	}
+
+	// Verify all descendants are gone
+	_, err = repo.FindByID(child.ID())
+	if err == nil {
+		t.Error("expected child to be deleted")
+	}
+
+	_, err = repo.FindByID(grandchild.ID())
+	if err == nil {
+		t.Error("expected grandchild to be deleted")
+	}
+
+	_, err = repo.FindByID(greatGrandchild.ID())
+	if err == nil {
+		t.Error("expected great-grandchild to be deleted")
+	}
+}
