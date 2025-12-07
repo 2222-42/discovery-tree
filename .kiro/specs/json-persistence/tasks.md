@@ -125,7 +125,7 @@
   - **Property 14: Concurrent write safety**
   - **Validates: Requirements 7.1, 7.2**
 
-- [ ] 10. Create property test generators
+- [x] 10. Create property test generators
   - Implement generator for random tasks
   - Implement generator for random task trees
   - Implement generator for invalid JSON data
