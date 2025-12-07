@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	"strings"
 	"time"
 
 	"discovery-tree/domain"
@@ -39,28 +40,43 @@ func ToDTO(task *domain.Task) TaskDTO {
 
 // FromDTO converts a TaskDTO to a domain Task
 // This function reconstructs a Task from persisted data
+// It performs comprehensive validation to ensure data integrity:
+// - ID must be non-empty and valid UUID format
+// - Description must be non-empty and not whitespace-only
+// - Position must be non-negative
+// - Status must be a valid status value
+// - Timestamps must be non-zero
+// - ParentID (if present) must be valid UUID format
 func FromDTO(dto TaskDTO) (*domain.Task, error) {
 	// Validate required fields
 	if dto.ID == "" {
 		return nil, domain.NewValidationError("id", "task ID cannot be empty")
 	}
-	if dto.Description == "" {
+	if strings.TrimSpace(dto.Description) == "" {
 		return nil, domain.NewValidationError("description", "description cannot be empty")
 	}
 	if dto.Position < 0 {
 		return nil, domain.NewValidationError("position", "position must be non-negative")
 	}
+	if dto.CreatedAt.IsZero() || dto.UpdatedAt.IsZero() {
+		return nil, domain.NewValidationError("timestamps", "timestamps cannot be zero")
+	}
 
-	// Parse TaskID
+	// Parse and validate TaskID (validates UUID format)
 	taskID, err := domain.TaskIDFromString(dto.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Parse Status
+	// Parse and validate Status (validates status is one of the allowed values)
 	status, err := domain.NewStatus(dto.Status)
 	if err != nil {
 		return nil, err
+	}
+
+	// Additional defensive check: ensure status is valid
+	if !status.IsValid() {
+		return nil, domain.NewValidationError("status", "invalid status value")
 	}
 
 	// Parse ParentID (handle null -> nil conversion)

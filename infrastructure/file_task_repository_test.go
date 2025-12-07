@@ -3,6 +3,7 @@ package infrastructure
 import (
 	"encoding/json"
 	"os"
+	"sync"
 	"testing"
 
 	"discovery-tree/domain"
@@ -1005,10 +1006,18 @@ func TestDeleteSubtree_ExistingTask(t *testing.T) {
 	grandchild1, _ := domain.NewTask("Grandchild 1", &child1ID, 0)
 	child2, _ := domain.NewTask("Child 2", &rootID, 1)
 	
-	repo.Save(root)
-	repo.Save(child1)
-	repo.Save(grandchild1)
-	repo.Save(child2)
+	if err := repo.Save(root); err != nil {
+		t.Errorf("Failed to save, err: %v", err)
+	}
+	if err := repo.Save(child1); err != nil {
+		t.Errorf("Failed to save, err: %v", err)
+	}
+	if err := repo.Save(grandchild1); err != nil {
+		t.Errorf("Failed to save, err: %v", err)
+	}
+	if err := repo.Save(child2); err != nil {
+		t.Errorf("Failed to save, err: %v", err)
+	}
 
 	// Verify all tasks exist
 	if len(repo.tasks) != 4 {
@@ -1287,9 +1296,10 @@ func TestConcurrentWrites(t *testing.T) {
 	// Wait for all goroutines to complete
 	for i := 0; i < numGoroutines; i++ {
 		<-done
-		if err := <-errCh; err != nil {
-			t.Errorf("Save failed: %v", err)
-		}
+	}
+	close(errCh)
+	if err := <-errCh; err != nil {
+		t.Errorf("Save failed: %v", err)
 	}
 
 	// Verify all tasks were saved
@@ -1533,9 +1543,10 @@ func TestConcurrentDeleteSubtree(t *testing.T) {
 	// Wait for all goroutines to complete
 	for i := 0; i < numSubtrees; i++ {
 		<-done
-		if err := <-errCh; err != nil {
-			t.Errorf("Unexpected error: %v", err)
-		}
+	}
+	close(errCh)
+	if err := <-errCh; err != nil {
+		t.Errorf("Unexpected error: %v", err)
 	}
 
 	// Verify only root remains

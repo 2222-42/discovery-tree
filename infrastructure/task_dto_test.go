@@ -215,6 +215,50 @@ func TestFromDTO_InvalidData(t *testing.T) {
 			},
 		},
 		{
+			name: "whitespace-only description (spaces)",
+			dto: TaskDTO{
+				ID:          "550e8400-e29b-41d4-a716-446655440000",
+				Description: "   ",
+				Status:      "TODO",
+				Position:    0,
+				CreatedAt:   time.Now(),
+				UpdatedAt:   time.Now(),
+			},
+		},
+		{
+			name: "whitespace-only description (tabs)",
+			dto: TaskDTO{
+				ID:          "550e8400-e29b-41d4-a716-446655440000",
+				Description: "\t\t",
+				Status:      "TODO",
+				Position:    0,
+				CreatedAt:   time.Now(),
+				UpdatedAt:   time.Now(),
+			},
+		},
+		{
+			name: "whitespace-only description (newlines)",
+			dto: TaskDTO{
+				ID:          "550e8400-e29b-41d4-a716-446655440000",
+				Description: "\n\n",
+				Status:      "TODO",
+				Position:    0,
+				CreatedAt:   time.Now(),
+				UpdatedAt:   time.Now(),
+			},
+		},
+		{
+			name: "whitespace-only description (mixed)",
+			dto: TaskDTO{
+				ID:          "550e8400-e29b-41d4-a716-446655440000",
+				Description: " \t\n ",
+				Status:      "TODO",
+				Position:    0,
+				CreatedAt:   time.Now(),
+				UpdatedAt:   time.Now(),
+			},
+		},
+		{
 			name: "negative position",
 			dto: TaskDTO{
 				ID:          "550e8400-e29b-41d4-a716-446655440000",
@@ -245,6 +289,39 @@ func TestFromDTO_InvalidData(t *testing.T) {
 				Position:    0,
 				CreatedAt:   time.Now(),
 				UpdatedAt:   time.Now(),
+			},
+		},
+		{
+			name: "zero CreatedAt timestamp",
+			dto: TaskDTO{
+				ID:          "550e8400-e29b-41d4-a716-446655440000",
+				Description: "Test",
+				Status:      "TODO",
+				Position:    0,
+				CreatedAt:   time.Time{}, // zero value
+				UpdatedAt:   time.Now(),
+			},
+		},
+		{
+			name: "zero UpdatedAt timestamp",
+			dto: TaskDTO{
+				ID:          "550e8400-e29b-41d4-a716-446655440000",
+				Description: "Test",
+				Status:      "TODO",
+				Position:    0,
+				CreatedAt:   time.Now(),
+				UpdatedAt:   time.Time{}, // zero value
+			},
+		},
+		{
+			name: "both timestamps zero",
+			dto: TaskDTO{
+				ID:          "550e8400-e29b-41d4-a716-446655440000",
+				Description: "Test",
+				Status:      "TODO",
+				Position:    0,
+				CreatedAt:   time.Time{}, // zero value
+				UpdatedAt:   time.Time{}, // zero value
 			},
 		},
 	}
