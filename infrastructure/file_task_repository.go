@@ -86,6 +86,38 @@ func (r *FileTaskRepository) load() error {
 	return nil
 }
 
+// persist writes the in-memory task collection to the JSON file atomically
+// Uses atomic write pattern: write to temp file, then rename
+// Formats JSON with 2-space indentation for readability
+func (r *FileTaskRepository) persist() error {
+	// Convert tasks to DTOs
+	dtos := make([]TaskDTO, 0, len(r.tasks))
+	for _, task := range r.tasks {
+		dtos = append(dtos, ToDTO(task))
+	}
+
+	// Marshal to JSON with indentation (2 spaces)
+	data, err := json.MarshalIndent(dtos, "", "  ")
+	if err != nil {
+		return WrapFileSystemError("marshal JSON", r.filePath, err)
+	}
+
+	// Write to temporary file
+	tmpPath := r.filePath + ".tmp"
+	if err := os.WriteFile(tmpPath, data, 0644); err != nil {
+		return WrapFileSystemError("write temporary file", tmpPath, err)
+	}
+
+	// Atomic rename (replaces target file atomically on POSIX systems)
+	if err := os.Rename(tmpPath, r.filePath); err != nil {
+		// Clean up temporary file on failure
+		os.Remove(tmpPath)
+		return WrapFileSystemError("atomic rename", r.filePath, err)
+	}
+
+	return nil
+}
+
 // Save persists a task (create or update)
 func (r *FileTaskRepository) Save(task *domain.Task) error {
 	// TODO: Implement in task 5
