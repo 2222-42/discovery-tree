@@ -138,7 +138,7 @@
   - Update all service methods to use injected repository
   - _Requirements: 5.1_
 
-- [ ] 12. Create initialization example in main or application layer
+- [x] 12. Create initialization example in main or application layer
   - Show how to create `FileTaskRepository` instance
   - Show how to inject repository into `TaskService`
   - Demonstrate configuration with custom file path
