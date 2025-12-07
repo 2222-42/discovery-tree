@@ -30,7 +30,7 @@
   - **Property 4: Invalid data rejection**
   - **Validates: Requirements 2.3, 2.4**
 
-- [ ] 3. Implement FileTaskRepository structure and initialization
+- [x] 3. Implement FileTaskRepository structure and initialization
   - Create `FileTaskRepository` struct with filePath, tasks map, and mutex
   - Implement `NewFileTaskRepository(filePath string)` constructor
   - Add default file path handling (use `./data/tasks.json` if empty)
