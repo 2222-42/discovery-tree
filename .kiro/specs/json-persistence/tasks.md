@@ -132,7 +132,7 @@
   - Implement generator for concurrent operation sequences
   - _Requirements: All property tests_
 
-- [ ] 11. Update TaskService to use dependency injection
+- [x] 11. Update TaskService to use dependency injection
   - Modify `TaskService` to accept `TaskRepository` interface in constructor
   - Remove direct dependency on in-memory repository
   - Update all service methods to use injected repository
