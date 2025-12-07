@@ -1173,3 +1173,365 @@ func TestDeleteSubtree_DeepTree(t *testing.T) {
 		t.Error("expected great-grandchild to be deleted")
 	}
 }
+
+// TestConcurrentReads tests that concurrent read operations are safe
+func TestConcurrentReads(t *testing.T) {
+	testPath := "./test_data/concurrent_reads.json"
+	os.RemoveAll("./test_data")
+	defer os.RemoveAll("./test_data")
+
+	repo, _ := NewFileTaskRepository(testPath)
+
+	// Create and save some tasks
+	root, _ := domain.NewTask("Root", nil, 0)
+	rootID := root.ID()
+	child1, _ := domain.NewTask("Child 1", &rootID, 0)
+	child2, _ := domain.NewTask("Child 2", &rootID, 1)
+
+	repo.Save(root)
+	repo.Save(child1)
+	repo.Save(child2)
+
+	// Perform concurrent reads
+	const numGoroutines = 10
+	const numReadsPerGoroutine = 100
+	done := make(chan bool, numGoroutines)
+
+	for i := 0; i < numGoroutines; i++ {
+		go func() {
+			for j := 0; j < numReadsPerGoroutine; j++ {
+				// Test FindByID
+				_, err := repo.FindByID(root.ID())
+				if err != nil {
+					t.Errorf("FindByID failed: %v", err)
+				}
+
+				// Test FindAll
+				_, err = repo.FindAll()
+				if err != nil {
+					t.Errorf("FindAll failed: %v", err)
+				}
+
+				// Test FindRoot
+				_, err = repo.FindRoot()
+				if err != nil {
+					t.Errorf("FindRoot failed: %v", err)
+				}
+
+				// Test FindByParentID
+				_, err = repo.FindByParentID(&rootID)
+				if err != nil {
+					t.Errorf("FindByParentID failed: %v", err)
+				}
+			}
+			done <- true
+		}()
+	}
+
+	// Wait for all goroutines to complete
+	for i := 0; i < numGoroutines; i++ {
+		<-done
+	}
+
+	// Verify data integrity after concurrent reads
+	tasks, _ := repo.FindAll()
+	if len(tasks) != 3 {
+		t.Errorf("expected 3 tasks after concurrent reads, got %d", len(tasks))
+	}
+}
+
+// TestConcurrentWrites tests that concurrent write operations are safe
+func TestConcurrentWrites(t *testing.T) {
+	testPath := "./test_data/concurrent_writes.json"
+	os.RemoveAll("./test_data")
+	defer os.RemoveAll("./test_data")
+
+	repo, _ := NewFileTaskRepository(testPath)
+
+	// Create a root task
+	root, _ := domain.NewTask("Root", nil, 0)
+	repo.Save(root)
+	rootID := root.ID()
+
+	// Perform concurrent writes (Save operations)
+	const numGoroutines = 10
+	done := make(chan bool, numGoroutines)
+
+	for i := 0; i < numGoroutines; i++ {
+		go func(index int) {
+			// Each goroutine creates and saves a task
+			task, _ := domain.NewTask("Task "+string(rune('A'+index)), &rootID, index)
+			err := repo.Save(task)
+			if err != nil {
+				t.Errorf("Save failed: %v", err)
+			}
+			done <- true
+		}(i)
+	}
+
+	// Wait for all goroutines to complete
+	for i := 0; i < numGoroutines; i++ {
+		<-done
+	}
+
+	// Verify all tasks were saved
+	tasks, _ := repo.FindAll()
+	expectedCount := numGoroutines + 1 // +1 for root
+	if len(tasks) != expectedCount {
+		t.Errorf("expected %d tasks after concurrent writes, got %d", expectedCount, len(tasks))
+	}
+
+	// Verify data was persisted to file
+	repo2, _ := NewFileTaskRepository(testPath)
+	tasks2, _ := repo2.FindAll()
+	if len(tasks2) != expectedCount {
+		t.Errorf("expected %d tasks in file after concurrent writes, got %d", expectedCount, len(tasks2))
+	}
+}
+
+// TestConcurrentSaves tests that concurrent save operations are safe
+func TestConcurrentSaves(t *testing.T) {
+	testPath := "./test_data/concurrent_saves.json"
+	os.RemoveAll("./test_data")
+	defer os.RemoveAll("./test_data")
+
+	repo, _ := NewFileTaskRepository(testPath)
+
+	// Create and save a root task
+	root, _ := domain.NewTask("Root", nil, 0)
+	repo.Save(root)
+	rootID := root.ID()
+
+	// Perform concurrent saves of different tasks
+	const numGoroutines = 10
+	done := make(chan bool, numGoroutines)
+
+	for i := 0; i < numGoroutines; i++ {
+		go func(index int) {
+			// Each goroutine creates and saves its own task
+			task, _ := domain.NewTask("Task "+string(rune('A'+index)), &rootID, index)
+			err := repo.Save(task)
+			if err != nil {
+				t.Errorf("Save failed: %v", err)
+			}
+			done <- true
+		}(i)
+	}
+
+	// Wait for all goroutines to complete
+	for i := 0; i < numGoroutines; i++ {
+		<-done
+	}
+
+	// Verify all tasks exist
+	allTasks, _ := repo.FindAll()
+	expectedCount := numGoroutines + 1 // +1 for root
+	if len(allTasks) != expectedCount {
+		t.Errorf("expected %d tasks after concurrent saves, got %d", expectedCount, len(allTasks))
+	}
+
+	// Verify data was persisted to file
+	repo2, _ := NewFileTaskRepository(testPath)
+	tasks2, _ := repo2.FindAll()
+	if len(tasks2) != expectedCount {
+		t.Errorf("expected %d tasks in file after concurrent saves, got %d", expectedCount, len(tasks2))
+	}
+}
+
+// TestConcurrentDeletes tests that concurrent delete operations are safe
+func TestConcurrentDeletes(t *testing.T) {
+	testPath := "./test_data/concurrent_deletes.json"
+	os.RemoveAll("./test_data")
+	defer os.RemoveAll("./test_data")
+
+	repo, _ := NewFileTaskRepository(testPath)
+
+	// Create and save multiple tasks
+	root, _ := domain.NewTask("Root", nil, 0)
+	repo.Save(root)
+	rootID := root.ID()
+
+	const numTasks = 20
+	taskIDs := make([]domain.TaskID, numTasks)
+	for i := 0; i < numTasks; i++ {
+		task, _ := domain.NewTask("Task "+string(rune('A'+i)), &rootID, i)
+		repo.Save(task)
+		taskIDs[i] = task.ID()
+	}
+
+	// Perform concurrent deletes
+	const numGoroutines = 10
+	done := make(chan bool, numGoroutines)
+
+	for i := 0; i < numGoroutines; i++ {
+		go func(index int) {
+			// Each goroutine deletes 2 tasks
+			for j := 0; j < 2; j++ {
+				taskIndex := index*2 + j
+				if taskIndex < numTasks {
+					err := repo.Delete(taskIDs[taskIndex])
+					// Error is expected if another goroutine already deleted it
+					if err != nil {
+						if _, ok := err.(domain.NotFoundError); !ok {
+							t.Errorf("unexpected error type: %T", err)
+						}
+					}
+				}
+			}
+			done <- true
+		}(i)
+	}
+
+	// Wait for all goroutines to complete
+	for i := 0; i < numGoroutines; i++ {
+		<-done
+	}
+
+	// Verify all tasks were deleted (only root remains)
+	tasks, _ := repo.FindAll()
+	if len(tasks) != 1 {
+		t.Errorf("expected 1 task (root) after concurrent deletes, got %d", len(tasks))
+	}
+
+	// Verify data was persisted to file
+	repo2, _ := NewFileTaskRepository(testPath)
+	tasks2, _ := repo2.FindAll()
+	if len(tasks2) != 1 {
+		t.Errorf("expected 1 task in file after concurrent deletes, got %d", len(tasks2))
+	}
+}
+
+// TestConcurrentMixedOperations tests concurrent reads and writes together
+func TestConcurrentMixedOperations(t *testing.T) {
+	testPath := "./test_data/concurrent_mixed.json"
+	os.RemoveAll("./test_data")
+	defer os.RemoveAll("./test_data")
+
+	repo, _ := NewFileTaskRepository(testPath)
+
+	// Create initial tasks
+	root, _ := domain.NewTask("Root", nil, 0)
+	repo.Save(root)
+	rootID := root.ID()
+
+	// Perform concurrent mixed operations
+	const numGoroutines = 10
+	done := make(chan bool, numGoroutines)
+
+	// 5 goroutines for reads
+	for i := 0; i < 5; i++ {
+		go func() {
+			for j := 0; j < 50; j++ {
+				repo.FindAll()
+				repo.FindRoot()
+				repo.FindByParentID(&rootID)
+			}
+			done <- true
+		}()
+	}
+
+	// 5 goroutines for writes (each creates different tasks)
+	for i := 0; i < 5; i++ {
+		go func(index int) {
+			for j := 0; j < 10; j++ {
+				task, _ := domain.NewTask("Task "+string(rune('A'+index))+"-"+string(rune('0'+j)), &rootID, index*10+j)
+				repo.Save(task)
+			}
+			done <- true
+		}(i)
+	}
+
+	// Wait for all goroutines to complete
+	for i := 0; i < numGoroutines; i++ {
+		<-done
+	}
+
+	// Verify data integrity
+	tasks, _ := repo.FindAll()
+	if len(tasks) < 1 {
+		t.Error("expected at least root task after concurrent operations")
+	}
+
+	// Verify root still exists
+	_, err := repo.FindByID(root.ID())
+	if err != nil {
+		t.Error("expected root to still exist")
+	}
+
+	// Verify data was persisted to file
+	repo2, _ := NewFileTaskRepository(testPath)
+	tasks2, _ := repo2.FindAll()
+	if len(tasks2) != len(tasks) {
+		t.Errorf("expected %d tasks in file, got %d", len(tasks), len(tasks2))
+	}
+}
+
+// TestConcurrentDeleteSubtree tests that concurrent DeleteSubtree operations are safe
+func TestConcurrentDeleteSubtree(t *testing.T) {
+	testPath := "./test_data/concurrent_delete_subtree.json"
+	os.RemoveAll("./test_data")
+	defer os.RemoveAll("./test_data")
+
+	repo, _ := NewFileTaskRepository(testPath)
+
+	// Create a tree structure
+	root, _ := domain.NewTask("Root", nil, 0)
+	repo.Save(root)
+	rootID := root.ID()
+
+	// Create multiple subtrees
+	const numSubtrees = 5
+	subtreeRoots := make([]domain.TaskID, numSubtrees)
+	for i := 0; i < numSubtrees; i++ {
+		subtreeRoot, _ := domain.NewTask("Subtree "+string(rune('A'+i)), &rootID, i)
+		repo.Save(subtreeRoot)
+		subtreeRoots[i] = subtreeRoot.ID()
+
+		// Add children to each subtree
+		subtreeRootID := subtreeRoot.ID()
+		for j := 0; j < 3; j++ {
+			child, _ := domain.NewTask("Child "+string(rune('A'+i))+"-"+string(rune('0'+j)), &subtreeRootID, j)
+			repo.Save(child)
+		}
+	}
+
+	// Perform concurrent DeleteSubtree operations
+	done := make(chan bool, numSubtrees)
+
+	for i := 0; i < numSubtrees; i++ {
+		go func(index int) {
+			err := repo.DeleteSubtree(subtreeRoots[index])
+			// Error is expected if another goroutine already deleted it
+			if err != nil {
+				if _, ok := err.(domain.NotFoundError); !ok {
+					t.Errorf("unexpected error type: %T", err)
+				}
+			}
+			done <- true
+		}(i)
+	}
+
+	// Wait for all goroutines to complete
+	for i := 0; i < numSubtrees; i++ {
+		<-done
+	}
+
+	// Verify only root remains
+	tasks, _ := repo.FindAll()
+	if len(tasks) != 1 {
+		t.Errorf("expected 1 task (root) after concurrent DeleteSubtree, got %d", len(tasks))
+	}
+
+	// Verify root still exists
+	_, err := repo.FindByID(root.ID())
+	if err != nil {
+		t.Error("expected root to still exist")
+	}
+
+	// Verify data was persisted to file
+	repo2, _ := NewFileTaskRepository(testPath)
+	tasks2, _ := repo2.FindAll()
+	if len(tasks2) != 1 {
+		t.Errorf("expected 1 task in file after concurrent DeleteSubtree, got %d", len(tasks2))
+	}
+}

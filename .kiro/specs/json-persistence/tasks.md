@@ -111,7 +111,7 @@
   - **Property 12: DeleteSubtree cascades**
   - **Validates: Requirements 5.3**
 
-- [ ] 9. Add concurrency safety tests
+- [x] 9. Add concurrency safety tests
   - Verify concurrent read operations are safe
   - Verify concurrent write operations are safe
   - Use Go race detector during testing
