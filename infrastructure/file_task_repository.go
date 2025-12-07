@@ -120,8 +120,15 @@ func (r *FileTaskRepository) persist() error {
 
 // Save persists a task (create or update)
 func (r *FileTaskRepository) Save(task *domain.Task) error {
-	// TODO: Implement in task 5
-	return nil
+	// Use write lock for thread safety
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	// Add task to in-memory map (or update if exists)
+	r.tasks[task.ID().String()] = task
+
+	// Call persist() to write to file
+	return r.persist()
 }
 
 // FindByID retrieves a task by its ID

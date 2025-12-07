@@ -393,3 +393,173 @@ func TestLoad_PreservesTaskRelationships(t *testing.T) {
 		t.Errorf("expected child2 position 1, got %d", loadedChild2.Position())
 	}
 }
+
+// TestSave_CreatesNewTask tests that Save creates a new task
+func TestSave_CreatesNewTask(t *testing.T) {
+	testPath := "./test_data/save_new.json"
+	os.RemoveAll("./test_data")
+	defer os.RemoveAll("./test_data")
+
+	repo, err := NewFileTaskRepository(testPath)
+	if err != nil {
+		t.Fatalf("expected no error creating repository, got %v", err)
+	}
+
+	// Create and save a task
+	task, _ := domain.NewTask("New Task", nil, 0)
+	err = repo.Save(task)
+	if err != nil {
+		t.Fatalf("expected no error saving task, got %v", err)
+	}
+
+	// Verify task is in memory
+	if len(repo.tasks) != 1 {
+		t.Errorf("expected 1 task in memory, got %d", len(repo.tasks))
+	}
+
+	savedTask, exists := repo.tasks[task.ID().String()]
+	if !exists {
+		t.Fatal("expected task to be in memory")
+	}
+	if savedTask.Description() != "New Task" {
+		t.Errorf("expected description 'New Task', got '%s'", savedTask.Description())
+	}
+
+	// Verify task was persisted to file
+	data, err := os.ReadFile(testPath)
+	if err != nil {
+		t.Fatalf("expected file to exist, got error: %v", err)
+	}
+
+	var dtos []TaskDTO
+	if err := json.Unmarshal(data, &dtos); err != nil {
+		t.Fatalf("expected valid JSON, got error: %v", err)
+	}
+
+	if len(dtos) != 1 {
+		t.Errorf("expected 1 task in file, got %d", len(dtos))
+	}
+	if dtos[0].Description != "New Task" {
+		t.Errorf("expected description 'New Task', got '%s'", dtos[0].Description)
+	}
+}
+
+// TestSave_UpdatesExistingTask tests that Save updates an existing task
+func TestSave_UpdatesExistingTask(t *testing.T) {
+	testPath := "./test_data/save_update.json"
+	os.RemoveAll("./test_data")
+	defer os.RemoveAll("./test_data")
+
+	repo, err := NewFileTaskRepository(testPath)
+	if err != nil {
+		t.Fatalf("expected no error creating repository, got %v", err)
+	}
+
+	// Create and save a task
+	task, _ := domain.NewTask("Original Task", nil, 0)
+	repo.Save(task)
+
+	// Update the task
+	task.UpdateDescription("Updated Task")
+	err = repo.Save(task)
+	if err != nil {
+		t.Fatalf("expected no error updating task, got %v", err)
+	}
+
+	// Verify task is updated in memory
+	savedTask := repo.tasks[task.ID().String()]
+	if savedTask.Description() != "Updated Task" {
+		t.Errorf("expected description 'Updated Task', got '%s'", savedTask.Description())
+	}
+
+	// Verify only one task exists
+	if len(repo.tasks) != 1 {
+		t.Errorf("expected 1 task in memory, got %d", len(repo.tasks))
+	}
+
+	// Verify task was persisted to file
+	data, err := os.ReadFile(testPath)
+	if err != nil {
+		t.Fatalf("expected file to exist, got error: %v", err)
+	}
+
+	var dtos []TaskDTO
+	json.Unmarshal(data, &dtos)
+
+	if len(dtos) != 1 {
+		t.Errorf("expected 1 task in file, got %d", len(dtos))
+	}
+	if dtos[0].Description != "Updated Task" {
+		t.Errorf("expected description 'Updated Task', got '%s'", dtos[0].Description)
+	}
+}
+
+// TestSave_MultipleTasks tests saving multiple tasks
+func TestSave_MultipleTasks(t *testing.T) {
+	testPath := "./test_data/save_multiple.json"
+	os.RemoveAll("./test_data")
+	defer os.RemoveAll("./test_data")
+
+	repo, err := NewFileTaskRepository(testPath)
+	if err != nil {
+		t.Fatalf("expected no error creating repository, got %v", err)
+	}
+
+	// Create and save multiple tasks
+	task1, _ := domain.NewTask("Task 1", nil, 0)
+	task2, _ := domain.NewTask("Task 2", nil, 1)
+	task3, _ := domain.NewTask("Task 3", nil, 2)
+
+	repo.Save(task1)
+	repo.Save(task2)
+	repo.Save(task3)
+
+	// Verify all tasks are in memory
+	if len(repo.tasks) != 3 {
+		t.Errorf("expected 3 tasks in memory, got %d", len(repo.tasks))
+	}
+
+	// Verify all tasks were persisted to file
+	data, err := os.ReadFile(testPath)
+	if err != nil {
+		t.Fatalf("expected file to exist, got error: %v", err)
+	}
+
+	var dtos []TaskDTO
+	json.Unmarshal(data, &dtos)
+
+	if len(dtos) != 3 {
+		t.Errorf("expected 3 tasks in file, got %d", len(dtos))
+	}
+}
+
+// TestSave_PersistsToFile tests that Save writes to file
+func TestSave_PersistsToFile(t *testing.T) {
+	testPath := "./test_data/save_persist.json"
+	os.RemoveAll("./test_data")
+	defer os.RemoveAll("./test_data")
+
+	// Create repository and save a task
+	repo1, _ := NewFileTaskRepository(testPath)
+	task, _ := domain.NewTask("Persisted Task", nil, 0)
+	repo1.Save(task)
+
+	// Create a new repository instance (loads from file)
+	repo2, err := NewFileTaskRepository(testPath)
+	if err != nil {
+		t.Fatalf("expected no error loading repository, got %v", err)
+	}
+
+	// Verify task was loaded from file
+	if len(repo2.tasks) != 1 {
+		t.Errorf("expected 1 task loaded from file, got %d", len(repo2.tasks))
+	}
+
+	loadedTask, exists := repo2.tasks[task.ID().String()]
+	if !exists {
+		t.Fatal("expected task to be loaded from file")
+	}
+	if loadedTask.Description() != "Persisted Task" {
+		t.Errorf("expected description 'Persisted Task', got '%s'", loadedTask.Description())
+	}
+}

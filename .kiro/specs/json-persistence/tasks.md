@@ -64,7 +64,7 @@
   - **Property 17: Human-readable formatting**
   - **Validates: Requirements 8.1**
 
-- [ ] 5. Implement Save method
+- [x] 5. Implement Save method
   - Implement `Save(task *Task)` method
   - Add task to in-memory map (or update if exists)
   - Call `persist()` to write to file
