@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"sort"
 	"sync"
 
 	"discovery-tree/domain"
@@ -133,26 +134,72 @@ func (r *FileTaskRepository) Save(task *domain.Task) error {
 
 // FindByID retrieves a task by its ID
 func (r *FileTaskRepository) FindByID(id domain.TaskID) (*domain.Task, error) {
-	// TODO: Implement in task 6
-	return nil, nil
+	// Use read lock for thread safety
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	task, exists := r.tasks[id.String()]
+	if !exists {
+		return nil, domain.NewNotFoundError("Task", id.String())
+	}
+
+	return task, nil
 }
 
 // FindByParentID retrieves all tasks with the given parent ID, ordered by position
 func (r *FileTaskRepository) FindByParentID(parentID *domain.TaskID) ([]*domain.Task, error) {
-	// TODO: Implement in task 6
-	return nil, nil
+	// Use read lock for thread safety
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	var result []*domain.Task
+
+	for _, task := range r.tasks {
+		// Check if this task has the matching parent
+		if parentID == nil && task.ParentID() == nil {
+			// Both are nil (root tasks)
+			result = append(result, task)
+		} else if parentID != nil && task.ParentID() != nil && parentID.Equals(*task.ParentID()) {
+			// Both are non-nil and equal
+			result = append(result, task)
+		}
+	}
+
+	// Sort by position (ascending)
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Position() < result[j].Position()
+	})
+
+	return result, nil
 }
 
 // FindRoot retrieves the root task (task with no parent)
 func (r *FileTaskRepository) FindRoot() (*domain.Task, error) {
-	// TODO: Implement in task 6
-	return nil, nil
+	// Use read lock for thread safety
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	for _, task := range r.tasks {
+		if task.ParentID() == nil {
+			return task, nil
+		}
+	}
+
+	return nil, domain.NewNotFoundError("Root Task", "root")
 }
 
 // FindAll retrieves all tasks
 func (r *FileTaskRepository) FindAll() ([]*domain.Task, error) {
-	// TODO: Implement in task 6
-	return nil, nil
+	// Use read lock for thread safety
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	result := make([]*domain.Task, 0, len(r.tasks))
+	for _, task := range r.tasks {
+		result = append(result, task)
+	}
+
+	return result, nil
 }
 
 // Delete removes a task by its ID

@@ -75,7 +75,7 @@
   - **Property 9: Save then find consistency**
   - **Validates: Requirements 5.2**
 
-- [ ] 6. Implement query methods
+- [x] 6. Implement query methods
   - Implement `FindByID(id TaskID)` with read lock
   - Implement `FindAll()` to return all tasks with read lock
   - Implement `FindRoot()` to find task with nil parent with read lock

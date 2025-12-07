@@ -563,3 +563,264 @@ func TestSave_PersistsToFile(t *testing.T) {
 		t.Errorf("expected description 'Persisted Task', got '%s'", loadedTask.Description())
 	}
 }
+
+// TestFindByID_ExistingTask tests finding a task by ID
+func TestFindByID_ExistingTask(t *testing.T) {
+	testPath := "./test_data/find_by_id.json"
+	os.RemoveAll("./test_data")
+	defer os.RemoveAll("./test_data")
+
+	repo, _ := NewFileTaskRepository(testPath)
+	
+	// Create and save a task
+	task, _ := domain.NewTask("Test Task", nil, 0)
+	repo.Save(task)
+
+	// Find the task
+	found, err := repo.FindByID(task.ID())
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if found.ID().String() != task.ID().String() {
+		t.Errorf("expected task ID %s, got %s", task.ID().String(), found.ID().String())
+	}
+	if found.Description() != "Test Task" {
+		t.Errorf("expected description 'Test Task', got '%s'", found.Description())
+	}
+}
+
+// TestFindByID_NonExistentTask tests finding a non-existent task
+func TestFindByID_NonExistentTask(t *testing.T) {
+	testPath := "./test_data/find_by_id_not_found.json"
+	os.RemoveAll("./test_data")
+	defer os.RemoveAll("./test_data")
+
+	repo, _ := NewFileTaskRepository(testPath)
+	
+	// Try to find a non-existent task
+	nonExistentID := domain.NewTaskID()
+	_, err := repo.FindByID(nonExistentID)
+	
+	if err == nil {
+		t.Fatal("expected NotFoundError, got nil")
+	}
+
+	if _, ok := err.(domain.NotFoundError); !ok {
+		t.Errorf("expected NotFoundError, got %T", err)
+	}
+}
+
+// TestFindAll_EmptyRepository tests finding all tasks in empty repository
+func TestFindAll_EmptyRepository(t *testing.T) {
+	testPath := "./test_data/find_all_empty.json"
+	os.RemoveAll("./test_data")
+	defer os.RemoveAll("./test_data")
+
+	repo, _ := NewFileTaskRepository(testPath)
+	
+	tasks, err := repo.FindAll()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if len(tasks) != 0 {
+		t.Errorf("expected 0 tasks, got %d", len(tasks))
+	}
+}
+
+// TestFindAll_MultipleTasks tests finding all tasks
+func TestFindAll_MultipleTasks(t *testing.T) {
+	testPath := "./test_data/find_all_multiple.json"
+	os.RemoveAll("./test_data")
+	defer os.RemoveAll("./test_data")
+
+	repo, _ := NewFileTaskRepository(testPath)
+	
+	// Create and save multiple tasks
+	task1, _ := domain.NewTask("Task 1", nil, 0)
+	task2, _ := domain.NewTask("Task 2", nil, 1)
+	task3, _ := domain.NewTask("Task 3", nil, 2)
+	
+	repo.Save(task1)
+	repo.Save(task2)
+	repo.Save(task3)
+
+	// Find all tasks
+	tasks, err := repo.FindAll()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if len(tasks) != 3 {
+		t.Errorf("expected 3 tasks, got %d", len(tasks))
+	}
+}
+
+// TestFindRoot_ExistingRoot tests finding the root task
+func TestFindRoot_ExistingRoot(t *testing.T) {
+	testPath := "./test_data/find_root.json"
+	os.RemoveAll("./test_data")
+	defer os.RemoveAll("./test_data")
+
+	repo, _ := NewFileTaskRepository(testPath)
+	
+	// Create root and child tasks
+	root, _ := domain.NewTask("Root Task", nil, 0)
+	rootID := root.ID()
+	child, _ := domain.NewTask("Child Task", &rootID, 0)
+	
+	repo.Save(root)
+	repo.Save(child)
+
+	// Find root
+	found, err := repo.FindRoot()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if found.ID().String() != root.ID().String() {
+		t.Errorf("expected root ID %s, got %s", root.ID().String(), found.ID().String())
+	}
+	if found.ParentID() != nil {
+		t.Error("expected root to have nil parent")
+	}
+}
+
+// TestFindRoot_NoRoot tests finding root when none exists
+func TestFindRoot_NoRoot(t *testing.T) {
+	testPath := "./test_data/find_root_none.json"
+	os.RemoveAll("./test_data")
+	defer os.RemoveAll("./test_data")
+
+	repo, _ := NewFileTaskRepository(testPath)
+	
+	// Try to find root in empty repository
+	_, err := repo.FindRoot()
+	
+	if err == nil {
+		t.Fatal("expected NotFoundError, got nil")
+	}
+
+	if _, ok := err.(domain.NotFoundError); !ok {
+		t.Errorf("expected NotFoundError, got %T", err)
+	}
+}
+
+// TestFindByParentID_RootChildren tests finding children of root
+func TestFindByParentID_RootChildren(t *testing.T) {
+	testPath := "./test_data/find_by_parent.json"
+	os.RemoveAll("./test_data")
+	defer os.RemoveAll("./test_data")
+
+	repo, _ := NewFileTaskRepository(testPath)
+	
+	// Create root and children
+	root, _ := domain.NewTask("Root", nil, 0)
+	rootID := root.ID()
+	child1, _ := domain.NewTask("Child 1", &rootID, 0)
+	child2, _ := domain.NewTask("Child 2", &rootID, 1)
+	child3, _ := domain.NewTask("Child 3", &rootID, 2)
+	
+	repo.Save(root)
+	repo.Save(child1)
+	repo.Save(child2)
+	repo.Save(child3)
+
+	// Find children of root
+	children, err := repo.FindByParentID(&rootID)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if len(children) != 3 {
+		t.Fatalf("expected 3 children, got %d", len(children))
+	}
+
+	// Verify ordering by position
+	if children[0].Position() != 0 {
+		t.Errorf("expected first child position 0, got %d", children[0].Position())
+	}
+	if children[1].Position() != 1 {
+		t.Errorf("expected second child position 1, got %d", children[1].Position())
+	}
+	if children[2].Position() != 2 {
+		t.Errorf("expected third child position 2, got %d", children[2].Position())
+	}
+
+	// Verify descriptions match expected order
+	if children[0].Description() != "Child 1" {
+		t.Errorf("expected 'Child 1', got '%s'", children[0].Description())
+	}
+	if children[1].Description() != "Child 2" {
+		t.Errorf("expected 'Child 2', got '%s'", children[1].Description())
+	}
+	if children[2].Description() != "Child 3" {
+		t.Errorf("expected 'Child 3', got '%s'", children[2].Description())
+	}
+}
+
+// TestFindByParentID_NoChildren tests finding children when none exist
+func TestFindByParentID_NoChildren(t *testing.T) {
+	testPath := "./test_data/find_by_parent_none.json"
+	os.RemoveAll("./test_data")
+	defer os.RemoveAll("./test_data")
+
+	repo, _ := NewFileTaskRepository(testPath)
+	
+	// Create a task with no children
+	task, _ := domain.NewTask("Leaf Task", nil, 0)
+	repo.Save(task)
+
+	taskID := task.ID()
+	children, err := repo.FindByParentID(&taskID)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if len(children) != 0 {
+		t.Errorf("expected 0 children, got %d", len(children))
+	}
+}
+
+// TestFindByParentID_OrderingWithGaps tests that ordering works even with position gaps
+func TestFindByParentID_OrderingWithGaps(t *testing.T) {
+	testPath := "./test_data/find_by_parent_gaps.json"
+	os.RemoveAll("./test_data")
+	defer os.RemoveAll("./test_data")
+
+	repo, _ := NewFileTaskRepository(testPath)
+	
+	// Create root and children with gaps in positions
+	root, _ := domain.NewTask("Root", nil, 0)
+	rootID := root.ID()
+	child1, _ := domain.NewTask("Child at 0", &rootID, 0)
+	child2, _ := domain.NewTask("Child at 5", &rootID, 5)
+	child3, _ := domain.NewTask("Child at 2", &rootID, 2)
+	
+	repo.Save(root)
+	repo.Save(child1)
+	repo.Save(child2)
+	repo.Save(child3)
+
+	// Find children of root
+	children, err := repo.FindByParentID(&rootID)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if len(children) != 3 {
+		t.Fatalf("expected 3 children, got %d", len(children))
+	}
+
+	// Verify ordering by position (should be 0, 2, 5)
+	if children[0].Description() != "Child at 0" {
+		t.Errorf("expected 'Child at 0' first, got '%s'", children[0].Description())
+	}
+	if children[1].Description() != "Child at 2" {
+		t.Errorf("expected 'Child at 2' second, got '%s'", children[1].Description())
+	}
+	if children[2].Description() != "Child at 5" {
+		t.Errorf("expected 'Child at 5' third, got '%s'", children[2].Description())
+	}
+}
