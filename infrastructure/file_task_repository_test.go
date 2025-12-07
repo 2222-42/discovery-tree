@@ -1196,6 +1196,8 @@ func TestConcurrentReads(t *testing.T) {
 	const numGoroutines = 10
 	const numReadsPerGoroutine = 100
 	done := make(chan bool, numGoroutines)
+	var mu sync.Mutex
+	errors := []error{}
 
 	for i := 0; i < numGoroutines; i++ {
 		go func() {
@@ -1203,25 +1205,33 @@ func TestConcurrentReads(t *testing.T) {
 				// Test FindByID
 				_, err := repo.FindByID(root.ID())
 				if err != nil {
-					t.Errorf("FindByID failed: %v", err)
+					mu.Lock()
+					errors = append(errors, err)
+					mu.Unlock()
 				}
 
 				// Test FindAll
 				_, err = repo.FindAll()
 				if err != nil {
-					t.Errorf("FindAll failed: %v", err)
+					mu.Lock()
+					errors = append(errors, err)
+					mu.Unlock()
 				}
 
 				// Test FindRoot
 				_, err = repo.FindRoot()
 				if err != nil {
-					t.Errorf("FindRoot failed: %v", err)
+					mu.Lock()
+					errors = append(errors, err)
+					mu.Unlock()
 				}
 
 				// Test FindByParentID
 				_, err = repo.FindByParentID(&rootID)
 				if err != nil {
-					t.Errorf("FindByParentID failed: %v", err)
+					mu.Lock()
+					errors = append(errors, err)
+					mu.Unlock()
 				}
 			}
 			done <- true
@@ -1231,6 +1241,10 @@ func TestConcurrentReads(t *testing.T) {
 	// Wait for all goroutines to complete
 	for i := 0; i < numGoroutines; i++ {
 		<-done
+	}
+
+	for _, err := range errors {
+    	t.Errorf("FindByID failed: %v", err)
 	}
 
 	// Verify data integrity after concurrent reads
@@ -1256,6 +1270,7 @@ func TestConcurrentWrites(t *testing.T) {
 	// Perform concurrent writes (Save operations)
 	const numGoroutines = 10
 	done := make(chan bool, numGoroutines)
+	errCh := make(chan error, numGoroutines)
 
 	for i := 0; i < numGoroutines; i++ {
 		go func(index int) {
@@ -1263,7 +1278,7 @@ func TestConcurrentWrites(t *testing.T) {
 			task, _ := domain.NewTask("Task "+string(rune('A'+index)), &rootID, index)
 			err := repo.Save(task)
 			if err != nil {
-				t.Errorf("Save failed: %v", err)
+				errCh <- err
 			}
 			done <- true
 		}(i)
@@ -1272,6 +1287,9 @@ func TestConcurrentWrites(t *testing.T) {
 	// Wait for all goroutines to complete
 	for i := 0; i < numGoroutines; i++ {
 		<-done
+		if err := <-errCh; err != nil {
+			t.Errorf("Save failed: %v", err)
+		}
 	}
 
 	// Verify all tasks were saved
@@ -1497,6 +1515,7 @@ func TestConcurrentDeleteSubtree(t *testing.T) {
 
 	// Perform concurrent DeleteSubtree operations
 	done := make(chan bool, numSubtrees)
+	errCh := make(chan error, numSubtrees)
 
 	for i := 0; i < numSubtrees; i++ {
 		go func(index int) {
@@ -1504,7 +1523,7 @@ func TestConcurrentDeleteSubtree(t *testing.T) {
 			// Error is expected if another goroutine already deleted it
 			if err != nil {
 				if _, ok := err.(domain.NotFoundError); !ok {
-					t.Errorf("unexpected error type: %T", err)
+					errCh <- err
 				}
 			}
 			done <- true
@@ -1514,6 +1533,9 @@ func TestConcurrentDeleteSubtree(t *testing.T) {
 	// Wait for all goroutines to complete
 	for i := 0; i < numSubtrees; i++ {
 		<-done
+		if err := <-errCh; err != nil {
+			t.Errorf("Unexpected error: %v", err)
+		}
 	}
 
 	// Verify only root remains
