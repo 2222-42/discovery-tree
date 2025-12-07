@@ -1001,9 +1001,9 @@ func TestTaskService_MoveTask_ComplexReordering(t *testing.T) {
 	child5, _ := service.CreateChildTask("Child 5", parent.ID())
 
 	// Perform multiple moves
-	service.MoveTask(child2.ID(), &parent.id, 4) // Move child2 to end
-	service.MoveTask(child5.ID(), &parent.id, 0) // Move child5 to start
-	service.MoveTask(child1.ID(), &parent.id, 2) // Move child1 to middle
+	_ = service.MoveTask(child2.ID(), &parent.id, 4) // Move child2 to end
+	_ = service.MoveTask(child5.ID(), &parent.id, 0) // Move child5 to start
+	_ = service.MoveTask(child1.ID(), &parent.id, 2) // Move child1 to middle
 
 	// Verify final order
 	children, _ := repo.FindByParentID(&parent.id)

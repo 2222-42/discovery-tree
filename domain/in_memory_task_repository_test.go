@@ -40,7 +40,9 @@ func TestInMemoryTaskRepository_FindByID(t *testing.T) {
 	repo := NewInMemoryTaskRepository()
 
 	task, _ := NewTask("Test task", nil, 0)
-	repo.Save(task)
+	if err := repo.Save(task); err != nil {
+		t.Fatalf("Save failed: %v", err)
+	}
 
 	retrieved, err := repo.FindByID(task.ID())
 	if err != nil {
@@ -69,16 +71,24 @@ func TestInMemoryTaskRepository_FindByParentID(t *testing.T) {
 
 	// Create parent task
 	parent, _ := NewTask("Parent", nil, 0)
-	repo.Save(parent)
+	if err := repo.Save(parent); err != nil {
+		t.Fatalf("Save parent failed: %v", err)
+	}
 
 	// Create child tasks
 	parentID := parent.ID()
 	child1, _ := NewTask("Child 1", &parentID, 0)
 	child2, _ := NewTask("Child 2", &parentID, 1)
 	child3, _ := NewTask("Child 3", &parentID, 2)
-	repo.Save(child1)
-	repo.Save(child2)
-	repo.Save(child3)
+	if err := repo.Save(child1); err != nil {
+		t.Fatalf("Save child1 failed: %v", err)
+	}
+	if err := repo.Save(child2); err != nil {
+		t.Fatalf("Save child2 failed: %v", err)
+	}
+	if err := repo.Save(child3); err != nil {
+		t.Fatalf("Save child3 failed: %v", err)
+	}
 
 	// Find children
 	children, err := repo.FindByParentID(&parentID)
@@ -101,12 +111,16 @@ func TestInMemoryTaskRepository_FindRoot(t *testing.T) {
 
 	// Create root task
 	root, _ := NewTask("Root", nil, 0)
-	repo.Save(root)
+	if err := repo.Save(root); err != nil {
+		t.Fatalf("Save root failed: %v", err)
+	}
 
 	// Create child task
 	rootID := root.ID()
 	child, _ := NewTask("Child", &rootID, 0)
-	repo.Save(child)
+	if err := repo.Save(child); err != nil {
+		t.Fatalf("Save child failed: %v", err)
+	}
 
 	// Find root
 	foundRoot, err := repo.FindRoot()
@@ -135,9 +149,15 @@ func TestInMemoryTaskRepository_FindAll(t *testing.T) {
 	task2, _ := NewTask("Task 2", &task1ID, 0)
 	task3, _ := NewTask("Task 3", &task1ID, 1)
 
-	repo.Save(task1)
-	repo.Save(task2)
-	repo.Save(task3)
+	if err := repo.Save(task1); err != nil {
+		t.Fatalf("Save task1 failed: %v", err)
+	}
+	if err := repo.Save(task2); err != nil {
+		t.Fatalf("Save task2 failed: %v", err)
+	}
+	if err := repo.Save(task3); err != nil {
+		t.Fatalf("Save task3 failed: %v", err)
+	}
 
 	all, err := repo.FindAll()
 	if err != nil {
@@ -153,7 +173,9 @@ func TestInMemoryTaskRepository_Delete(t *testing.T) {
 	repo := NewInMemoryTaskRepository()
 
 	task, _ := NewTask("Task", nil, 0)
-	repo.Save(task)
+	if err := repo.Save(task); err != nil {
+		t.Fatalf("Save failed: %v", err)
+	}
 
 	err := repo.Delete(task.ID())
 	if err != nil {
@@ -188,19 +210,29 @@ func TestInMemoryTaskRepository_DeleteSubtree(t *testing.T) {
 	//   └── child2
 
 	root, _ := NewTask("Root", nil, 0)
-	repo.Save(root)
+	if err := repo.Save(root); err != nil {
+		t.Fatalf("Save root failed: %v", err)
+	}
 
 	rootID := root.ID()
 	child1, _ := NewTask("Child 1", &rootID, 0)
 	child2, _ := NewTask("Child 2", &rootID, 1)
-	repo.Save(child1)
-	repo.Save(child2)
+	if err := repo.Save(child1); err != nil {
+		t.Fatalf("Save child1 failed: %v", err)
+	}
+	if err := repo.Save(child2); err != nil {
+		t.Fatalf("Save child2 failed: %v", err)
+	}
 
 	child1ID := child1.ID()
 	grandchild1, _ := NewTask("Grandchild 1", &child1ID, 0)
 	grandchild2, _ := NewTask("Grandchild 2", &child1ID, 1)
-	repo.Save(grandchild1)
-	repo.Save(grandchild2)
+	if err := repo.Save(grandchild1); err != nil {
+		t.Fatalf("Save grandchild1 failed: %v", err)
+	}
+	if err := repo.Save(grandchild2); err != nil {
+		t.Fatalf("Save grandchild2 failed: %v", err)
+	}
 
 	// Delete child1 subtree
 	err := repo.DeleteSubtree(child1.ID())

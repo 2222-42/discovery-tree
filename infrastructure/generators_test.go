@@ -463,7 +463,7 @@ func GenValidTaskDTO() gopter.Gen {
 		status := values[3].(domain.Status)
 		
 		task, _ := domain.NewTask(desc, parentID, position)
-		task.ChangeStatus(status)
+		_ = task.ChangeStatus(status)
 		
 		return ToDTO(task)
 	})

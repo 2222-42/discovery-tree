@@ -94,11 +94,8 @@ func TestGenTaskTree_GeneratesValidTrees(t *testing.T) {
 					break
 				}
 			}
-			if !found {
-				return false
-			}
 
-			return true
+			return !found
 		},
 		GenTaskTree(),
 	))
@@ -357,7 +354,9 @@ func TestGenerators_Integration(t *testing.T) {
 			}
 
 			// Clean up for next iteration
-			os.Remove(testPath)
+			if err := os.Remove(testPath); err != nil {
+				t.Errorf("Failed to remove, err: %v", err)
+			}
 
 			return true
 		},

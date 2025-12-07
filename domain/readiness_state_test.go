@@ -100,10 +100,10 @@ func TestReadinessState_ReasonsImmutability(t *testing.T) {
 	originalReasons := []string{"Reason 1", "Reason 2"}
 	state := NewReadinessState(false, false, originalReasons)
 
-	// Get reasons and modify them
+	// Get reasons and modify them (intentionally testing immutability)
 	reasons := state.Reasons()
 	reasons[0] = "Modified"
-	reasons = append(reasons, "New reason")
+	_ = append(reasons, "New reason") // Intentionally not using result to test immutability
 
 	// Get reasons again and verify they haven't changed
 	newReasons := state.Reasons()
@@ -121,9 +121,9 @@ func TestReadinessState_InputReasonsImmutability(t *testing.T) {
 	inputReasons := []string{"Reason 1"}
 	state := NewReadinessState(false, true, inputReasons)
 
-	// Modify the input slice
+	// Modify the input slice (intentionally testing immutability)
 	inputReasons[0] = "Modified"
-	inputReasons = append(inputReasons, "New reason")
+	_ = append(inputReasons, "New reason") // Intentionally not using result to test immutability
 
 	// Verify the state's reasons haven't changed
 	stateReasons := state.Reasons()

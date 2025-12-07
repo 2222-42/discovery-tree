@@ -97,8 +97,8 @@ func TestNewFileTaskRepository_EmptyFile(t *testing.T) {
 	defer os.RemoveAll("./test_data")
 
 	// Create empty file
-	os.MkdirAll("./test_data", 0755)
-	os.WriteFile(testPath, []byte(""), 0644)
+	_ = os.MkdirAll("./test_data", 0755)
+	_ = os.WriteFile(testPath, []byte(""), 0644)
 
 	repo, err := NewFileTaskRepository(testPath)
 	if err != nil {
@@ -123,13 +123,13 @@ func TestNewFileTaskRepository_LoadsExistingTasks(t *testing.T) {
 	task2, _ := domain.NewTask("Task 2", &task2ID, 0)
 
 	// Write tasks to file
-	os.MkdirAll("./test_data", 0755)
+	_ = os.MkdirAll("./test_data", 0755)
 	dtos := []TaskDTO{
 		ToDTO(task1),
 		ToDTO(task2),
 	}
 	data, _ := json.MarshalIndent(dtos, "", "  ")
-	os.WriteFile(testPath, data, 0644)
+	_ = os.WriteFile(testPath, data, 0644)
 
 	// Load repository
 	repo, err := NewFileTaskRepository(testPath)
@@ -167,8 +167,8 @@ func TestNewFileTaskRepository_InvalidJSON(t *testing.T) {
 	defer os.RemoveAll("./test_data")
 
 	// Write invalid JSON
-	os.MkdirAll("./test_data", 0755)
-	os.WriteFile(testPath, []byte("{invalid json}"), 0644)
+	_ = os.MkdirAll("./test_data", 0755)
+	_ = os.WriteFile(testPath, []byte("{invalid json}"), 0644)
 
 	// Should return error
 	_, err := NewFileTaskRepository(testPath)
@@ -189,7 +189,7 @@ func TestNewFileTaskRepository_InvalidTaskData(t *testing.T) {
 	defer os.RemoveAll("./test_data")
 
 	// Write JSON with invalid task data (empty description)
-	os.MkdirAll("./test_data", 0755)
+	_ = os.MkdirAll("./test_data", 0755)
 	invalidDTO := TaskDTO{
 		ID:          "550e8400-e29b-41d4-a716-446655440000",
 		Description: "", // Invalid: empty description
@@ -198,7 +198,7 @@ func TestNewFileTaskRepository_InvalidTaskData(t *testing.T) {
 		Position:    0,
 	}
 	data, _ := json.Marshal([]TaskDTO{invalidDTO})
-	os.WriteFile(testPath, data, 0644)
+	_ = os.WriteFile(testPath, data, 0644)
 
 	// Should return error
 	_, err := NewFileTaskRepository(testPath)
@@ -219,7 +219,7 @@ func TestNewFileTaskRepository_InvalidTaskID(t *testing.T) {
 	defer os.RemoveAll("./test_data")
 
 	// Write JSON with invalid task ID
-	os.MkdirAll("./test_data", 0755)
+	_ = os.MkdirAll("./test_data", 0755)
 	invalidDTO := TaskDTO{
 		ID:          "not-a-uuid",
 		Description: "Valid description",
@@ -228,7 +228,7 @@ func TestNewFileTaskRepository_InvalidTaskID(t *testing.T) {
 		Position:    0,
 	}
 	data, _ := json.Marshal([]TaskDTO{invalidDTO})
-	os.WriteFile(testPath, data, 0644)
+	_ = os.WriteFile(testPath, data, 0644)
 
 	// Should return error
 	_, err := NewFileTaskRepository(testPath)
@@ -244,7 +244,7 @@ func TestNewFileTaskRepository_InvalidStatus(t *testing.T) {
 	defer os.RemoveAll("./test_data")
 
 	// Write JSON with invalid status
-	os.MkdirAll("./test_data", 0755)
+	_ = os.MkdirAll("./test_data", 0755)
 	invalidDTO := TaskDTO{
 		ID:          "550e8400-e29b-41d4-a716-446655440000",
 		Description: "Valid description",
@@ -253,7 +253,7 @@ func TestNewFileTaskRepository_InvalidStatus(t *testing.T) {
 		Position:    0,
 	}
 	data, _ := json.Marshal([]TaskDTO{invalidDTO})
-	os.WriteFile(testPath, data, 0644)
+	_ = os.WriteFile(testPath, data, 0644)
 
 	// Should return error
 	_, err := NewFileTaskRepository(testPath)
@@ -269,7 +269,7 @@ func TestNewFileTaskRepository_NegativePosition(t *testing.T) {
 	defer os.RemoveAll("./test_data")
 
 	// Write JSON with negative position
-	os.MkdirAll("./test_data", 0755)
+	_ = os.MkdirAll("./test_data", 0755)
 	invalidDTO := TaskDTO{
 		ID:          "550e8400-e29b-41d4-a716-446655440000",
 		Description: "Valid description",
@@ -278,7 +278,7 @@ func TestNewFileTaskRepository_NegativePosition(t *testing.T) {
 		Position:    -1, // Invalid: negative position
 	}
 	data, _ := json.Marshal([]TaskDTO{invalidDTO})
-	os.WriteFile(testPath, data, 0644)
+	_ = os.WriteFile(testPath, data, 0644)
 
 	// Should return error
 	_, err := NewFileTaskRepository(testPath)
@@ -299,7 +299,7 @@ func TestNewFileTaskRepository_InvalidParentID(t *testing.T) {
 	defer os.RemoveAll("./test_data")
 
 	// Write JSON with invalid parent ID
-	os.MkdirAll("./test_data", 0755)
+	_ = os.MkdirAll("./test_data", 0755)
 	invalidParentID := "not-a-uuid"
 	invalidDTO := TaskDTO{
 		ID:          "550e8400-e29b-41d4-a716-446655440000",
@@ -309,7 +309,7 @@ func TestNewFileTaskRepository_InvalidParentID(t *testing.T) {
 		Position:    0,
 	}
 	data, _ := json.Marshal([]TaskDTO{invalidDTO})
-	os.WriteFile(testPath, data, 0644)
+	_ = os.WriteFile(testPath, data, 0644)
 
 	// Should return error
 	_, err := NewFileTaskRepository(testPath)
@@ -351,14 +351,14 @@ func TestLoad_PreservesTaskRelationships(t *testing.T) {
 	child2, _ := domain.NewTask("Child 2", &rootID, 1)
 
 	// Write to file
-	os.MkdirAll("./test_data", 0755)
+	_ = os.MkdirAll("./test_data", 0755)
 	dtos := []TaskDTO{
 		ToDTO(root),
 		ToDTO(child1),
 		ToDTO(child2),
 	}
 	data, _ := json.MarshalIndent(dtos, "", "  ")
-	os.WriteFile(testPath, data, 0644)
+	_ = os.WriteFile(testPath, data, 0644)
 
 	// Load repository
 	repo, err := NewFileTaskRepository(testPath)
@@ -458,10 +458,10 @@ func TestSave_UpdatesExistingTask(t *testing.T) {
 
 	// Create and save a task
 	task, _ := domain.NewTask("Original Task", nil, 0)
-	repo.Save(task)
+	_ = repo.Save(task)
 
 	// Update the task
-	task.UpdateDescription("Updated Task")
+	_ = task.UpdateDescription("Updated Task")
 	err = repo.Save(task)
 	if err != nil {
 		t.Fatalf("expected no error updating task, got %v", err)
@@ -485,7 +485,7 @@ func TestSave_UpdatesExistingTask(t *testing.T) {
 	}
 
 	var dtos []TaskDTO
-	json.Unmarshal(data, &dtos)
+	_ = json.Unmarshal(data, &dtos)
 
 	if len(dtos) != 1 {
 		t.Errorf("expected 1 task in file, got %d", len(dtos))
@@ -511,9 +511,9 @@ func TestSave_MultipleTasks(t *testing.T) {
 	task2, _ := domain.NewTask("Task 2", nil, 1)
 	task3, _ := domain.NewTask("Task 3", nil, 2)
 
-	repo.Save(task1)
-	repo.Save(task2)
-	repo.Save(task3)
+	_ = repo.Save(task1)
+	_ = repo.Save(task2)
+	_ = repo.Save(task3)
 
 	// Verify all tasks are in memory
 	if len(repo.tasks) != 3 {
@@ -527,7 +527,7 @@ func TestSave_MultipleTasks(t *testing.T) {
 	}
 
 	var dtos []TaskDTO
-	json.Unmarshal(data, &dtos)
+	_ = json.Unmarshal(data, &dtos)
 
 	if len(dtos) != 3 {
 		t.Errorf("expected 3 tasks in file, got %d", len(dtos))
@@ -543,7 +543,7 @@ func TestSave_PersistsToFile(t *testing.T) {
 	// Create repository and save a task
 	repo1, _ := NewFileTaskRepository(testPath)
 	task, _ := domain.NewTask("Persisted Task", nil, 0)
-	repo1.Save(task)
+	_ = repo1.Save(task)
 
 	// Create a new repository instance (loads from file)
 	repo2, err := NewFileTaskRepository(testPath)
@@ -575,7 +575,7 @@ func TestFindByID_ExistingTask(t *testing.T) {
 	
 	// Create and save a task
 	task, _ := domain.NewTask("Test Task", nil, 0)
-	repo.Save(task)
+	_ = repo.Save(task)
 
 	// Find the task
 	found, err := repo.FindByID(task.ID())
@@ -643,9 +643,9 @@ func TestFindAll_MultipleTasks(t *testing.T) {
 	task2, _ := domain.NewTask("Task 2", nil, 1)
 	task3, _ := domain.NewTask("Task 3", nil, 2)
 	
-	repo.Save(task1)
-	repo.Save(task2)
-	repo.Save(task3)
+	_ = repo.Save(task1)
+	_ = repo.Save(task2)
+	_ = repo.Save(task3)
 
 	// Find all tasks
 	tasks, err := repo.FindAll()
@@ -671,8 +671,8 @@ func TestFindRoot_ExistingRoot(t *testing.T) {
 	rootID := root.ID()
 	child, _ := domain.NewTask("Child Task", &rootID, 0)
 	
-	repo.Save(root)
-	repo.Save(child)
+	_ = repo.Save(root)
+	_ = repo.Save(child)
 
 	// Find root
 	found, err := repo.FindRoot()
@@ -723,10 +723,10 @@ func TestFindByParentID_RootChildren(t *testing.T) {
 	child2, _ := domain.NewTask("Child 2", &rootID, 1)
 	child3, _ := domain.NewTask("Child 3", &rootID, 2)
 	
-	repo.Save(root)
-	repo.Save(child1)
-	repo.Save(child2)
-	repo.Save(child3)
+	_ = repo.Save(root)
+	_ = repo.Save(child1)
+	_ = repo.Save(child2)
+	_ = repo.Save(child3)
 
 	// Find children of root
 	children, err := repo.FindByParentID(&rootID)
@@ -771,7 +771,7 @@ func TestFindByParentID_NoChildren(t *testing.T) {
 	
 	// Create a task with no children
 	task, _ := domain.NewTask("Leaf Task", nil, 0)
-	repo.Save(task)
+	_ = repo.Save(task)
 
 	taskID := task.ID()
 	children, err := repo.FindByParentID(&taskID)
@@ -799,10 +799,10 @@ func TestFindByParentID_OrderingWithGaps(t *testing.T) {
 	child2, _ := domain.NewTask("Child at 5", &rootID, 5)
 	child3, _ := domain.NewTask("Child at 2", &rootID, 2)
 	
-	repo.Save(root)
-	repo.Save(child1)
-	repo.Save(child2)
-	repo.Save(child3)
+	_ = repo.Save(root)
+	_ = repo.Save(child1)
+	_ = repo.Save(child2)
+	_ = repo.Save(child3)
 
 	// Find children of root
 	children, err := repo.FindByParentID(&rootID)
@@ -836,7 +836,7 @@ func TestDelete_ExistingTask(t *testing.T) {
 	
 	// Create and save a task
 	task, _ := domain.NewTask("Task to Delete", nil, 0)
-	repo.Save(task)
+	_ = repo.Save(task)
 
 	// Verify task exists
 	if len(repo.tasks) != 1 {
@@ -904,9 +904,9 @@ func TestDelete_OneOfMultipleTasks(t *testing.T) {
 	task2, _ := domain.NewTask("Task 2", nil, 1)
 	task3, _ := domain.NewTask("Task 3", nil, 2)
 	
-	repo.Save(task1)
-	repo.Save(task2)
-	repo.Save(task3)
+	_ = repo.Save(task1)
+	_ = repo.Save(task2)
+	_ = repo.Save(task3)
 
 	// Delete task2
 	err := repo.Delete(task2.ID())
@@ -957,9 +957,9 @@ func TestDelete_DoesNotDeleteChildren(t *testing.T) {
 	child1, _ := domain.NewTask("Child 1", &parentID, 0)
 	child2, _ := domain.NewTask("Child 2", &parentID, 1)
 	
-	repo.Save(parent)
-	repo.Save(child1)
-	repo.Save(child2)
+	_ = repo.Save(parent)
+	_ = repo.Save(child1)
+	_ = repo.Save(child2)
 
 	// Delete parent
 	err := repo.Delete(parent.ID())
@@ -1100,8 +1100,8 @@ func TestDeleteSubtree_LeafTask(t *testing.T) {
 	rootID := root.ID()
 	child, _ := domain.NewTask("Child", &rootID, 0)
 	
-	repo.Save(root)
-	repo.Save(child)
+	_ = repo.Save(root)
+	_ = repo.Save(child)
 
 	// Delete leaf task (child)
 	err := repo.DeleteSubtree(child.ID())
@@ -1144,10 +1144,10 @@ func TestDeleteSubtree_DeepTree(t *testing.T) {
 	grandchildID := grandchild.ID()
 	greatGrandchild, _ := domain.NewTask("Great-Grandchild", &grandchildID, 0)
 	
-	repo.Save(root)
-	repo.Save(child)
-	repo.Save(grandchild)
-	repo.Save(greatGrandchild)
+	_ = repo.Save(root)
+	_ = repo.Save(child)
+	_ = repo.Save(grandchild)
+	_ = repo.Save(greatGrandchild)
 
 	// Delete child subtree (should delete child, grandchild, and great-grandchild)
 	err := repo.DeleteSubtree(child.ID())
@@ -1197,9 +1197,9 @@ func TestConcurrentReads(t *testing.T) {
 	child1, _ := domain.NewTask("Child 1", &rootID, 0)
 	child2, _ := domain.NewTask("Child 2", &rootID, 1)
 
-	repo.Save(root)
-	repo.Save(child1)
-	repo.Save(child2)
+	_ = repo.Save(root)
+	_ = repo.Save(child1)
+	_ = repo.Save(child2)
 
 	// Perform concurrent reads
 	const numGoroutines = 10
@@ -1273,7 +1273,7 @@ func TestConcurrentWrites(t *testing.T) {
 
 	// Create a root task
 	root, _ := domain.NewTask("Root", nil, 0)
-	repo.Save(root)
+	_ = repo.Save(root)
 	rootID := root.ID()
 
 	// Perform concurrent writes (Save operations)
@@ -1327,7 +1327,7 @@ func TestConcurrentSaves(t *testing.T) {
 
 	// Create and save a root task
 	root, _ := domain.NewTask("Root", nil, 0)
-	repo.Save(root)
+	_ = repo.Save(root)
 	rootID := root.ID()
 
 	// Perform concurrent saves of different tasks
@@ -1376,14 +1376,14 @@ func TestConcurrentDeletes(t *testing.T) {
 
 	// Create and save multiple tasks
 	root, _ := domain.NewTask("Root", nil, 0)
-	repo.Save(root)
+	_ = repo.Save(root)
 	rootID := root.ID()
 
 	const numTasks = 20
 	taskIDs := make([]domain.TaskID, numTasks)
 	for i := 0; i < numTasks; i++ {
 		task, _ := domain.NewTask("Task "+string(rune('A'+i)), &rootID, i)
-		repo.Save(task)
+		_ = repo.Save(task)
 		taskIDs[i] = task.ID()
 	}
 
@@ -1439,7 +1439,7 @@ func TestConcurrentMixedOperations(t *testing.T) {
 
 	// Create initial tasks
 	root, _ := domain.NewTask("Root", nil, 0)
-	repo.Save(root)
+	_ = repo.Save(root)
 	rootID := root.ID()
 
 	// Perform concurrent mixed operations
@@ -1450,9 +1450,9 @@ func TestConcurrentMixedOperations(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		go func() {
 			for j := 0; j < 50; j++ {
-				repo.FindAll()
-				repo.FindRoot()
-				repo.FindByParentID(&rootID)
+				_, _ = repo.FindAll()
+				_, _ = repo.FindRoot()
+				_, _ = repo.FindByParentID(&rootID)
 			}
 			done <- true
 		}()
@@ -1463,7 +1463,7 @@ func TestConcurrentMixedOperations(t *testing.T) {
 		go func(index int) {
 			for j := 0; j < 10; j++ {
 				task, _ := domain.NewTask("Task "+string(rune('A'+index))+"-"+string(rune('0'+j)), &rootID, index*10+j)
-				repo.Save(task)
+				_ = repo.Save(task)
 			}
 			done <- true
 		}(i)
@@ -1504,7 +1504,7 @@ func TestConcurrentDeleteSubtree(t *testing.T) {
 
 	// Create a tree structure
 	root, _ := domain.NewTask("Root", nil, 0)
-	repo.Save(root)
+	_ = repo.Save(root)
 	rootID := root.ID()
 
 	// Create multiple subtrees
@@ -1512,14 +1512,14 @@ func TestConcurrentDeleteSubtree(t *testing.T) {
 	subtreeRoots := make([]domain.TaskID, numSubtrees)
 	for i := 0; i < numSubtrees; i++ {
 		subtreeRoot, _ := domain.NewTask("Subtree "+string(rune('A'+i)), &rootID, i)
-		repo.Save(subtreeRoot)
+		_ = repo.Save(subtreeRoot)
 		subtreeRoots[i] = subtreeRoot.ID()
 
 		// Add children to each subtree
 		subtreeRootID := subtreeRoot.ID()
 		for j := 0; j < 3; j++ {
 			child, _ := domain.NewTask("Child "+string(rune('A'+i))+"-"+string(rune('0'+j)), &subtreeRootID, j)
-			repo.Save(child)
+			_ = repo.Save(child)
 		}
 	}
 

@@ -17,7 +17,7 @@ func TestReadinessEvaluatorService_EvaluateReadiness(t *testing.T) {
 			name: "root task with no children is ready",
 			setupTree: func(repo TaskRepository) TaskID {
 				root, _ := NewTask("Root", nil, 0)
-				repo.Save(root)
+				_ = repo.Save(root)
 				return root.ID()
 			},
 			expectedReady:       true,
@@ -29,15 +29,15 @@ func TestReadinessEvaluatorService_EvaluateReadiness(t *testing.T) {
 			name: "root task with all children DONE is ready",
 			setupTree: func(repo TaskRepository) TaskID {
 				root, _ := NewTask("Root", nil, 0)
-				repo.Save(root)
+				_ = repo.Save(root)
 
 				child1, _ := NewTask("Child 1", &root.id, 0)
-				child1.ChangeStatus(StatusDONE)
-				repo.Save(child1)
+				_ = child1.ChangeStatus(StatusDONE)
+				_ = repo.Save(child1)
 
 				child2, _ := NewTask("Child 2", &root.id, 1)
-				child2.ChangeStatus(StatusDONE)
-				repo.Save(child2)
+				_ = child2.ChangeStatus(StatusDONE)
+				_ = repo.Save(child2)
 
 				return root.ID()
 			},
@@ -50,15 +50,15 @@ func TestReadinessEvaluatorService_EvaluateReadiness(t *testing.T) {
 			name: "root task with incomplete children is not ready",
 			setupTree: func(repo TaskRepository) TaskID {
 				root, _ := NewTask("Root", nil, 0)
-				repo.Save(root)
+				_ = repo.Save(root)
 
 				child1, _ := NewTask("Child 1", &root.id, 0)
-				child1.ChangeStatus(StatusDONE)
-				repo.Save(child1)
+				_ = child1.ChangeStatus(StatusDONE)
+				_ = repo.Save(child1)
 
 				child2, _ := NewTask("Child 2", &root.id, 1)
-				child2.ChangeStatus(StatusTODO)
-				repo.Save(child2)
+				_ = child2.ChangeStatus(StatusTODO)
+				_ = repo.Save(child2)
 
 				return root.ID()
 			},
@@ -71,10 +71,10 @@ func TestReadinessEvaluatorService_EvaluateReadiness(t *testing.T) {
 			name: "leftmost child with no children is ready",
 			setupTree: func(repo TaskRepository) TaskID {
 				root, _ := NewTask("Root", nil, 0)
-				repo.Save(root)
+				_ = repo.Save(root)
 
 				child1, _ := NewTask("Child 1", &root.id, 0)
-				repo.Save(child1)
+				_ = repo.Save(child1)
 
 				return child1.ID()
 			},
@@ -87,14 +87,14 @@ func TestReadinessEvaluatorService_EvaluateReadiness(t *testing.T) {
 			name: "middle child with left sibling DONE is ready",
 			setupTree: func(repo TaskRepository) TaskID {
 				root, _ := NewTask("Root", nil, 0)
-				repo.Save(root)
+				_ = repo.Save(root)
 
 				child1, _ := NewTask("Child 1", &root.id, 0)
-				child1.ChangeStatus(StatusDONE)
-				repo.Save(child1)
+				_ = child1.ChangeStatus(StatusDONE)
+				_ = repo.Save(child1)
 
 				child2, _ := NewTask("Child 2", &root.id, 1)
-				repo.Save(child2)
+				_ = repo.Save(child2)
 
 				return child2.ID()
 			},
@@ -107,14 +107,14 @@ func TestReadinessEvaluatorService_EvaluateReadiness(t *testing.T) {
 			name: "middle child with left sibling incomplete is not ready",
 			setupTree: func(repo TaskRepository) TaskID {
 				root, _ := NewTask("Root", nil, 0)
-				repo.Save(root)
+				_ = repo.Save(root)
 
 				child1, _ := NewTask("Child 1", &root.id, 0)
-				child1.ChangeStatus(StatusTODO)
-				repo.Save(child1)
+				_ = child1.ChangeStatus(StatusTODO)
+				_ = repo.Save(child1)
 
 				child2, _ := NewTask("Child 2", &root.id, 1)
-				repo.Save(child2)
+				_ = repo.Save(child2)
 
 				return child2.ID()
 			},
@@ -127,18 +127,18 @@ func TestReadinessEvaluatorService_EvaluateReadiness(t *testing.T) {
 			name: "task with incomplete left sibling and incomplete children is not ready",
 			setupTree: func(repo TaskRepository) TaskID {
 				root, _ := NewTask("Root", nil, 0)
-				repo.Save(root)
+				_ = repo.Save(root)
 
 				child1, _ := NewTask("Child 1", &root.id, 0)
-				child1.ChangeStatus(StatusTODO)
-				repo.Save(child1)
+				_ = child1.ChangeStatus(StatusTODO)
+				_ = repo.Save(child1)
 
 				child2, _ := NewTask("Child 2", &root.id, 1)
-				repo.Save(child2)
+				_ = repo.Save(child2)
 
 				grandchild, _ := NewTask("Grandchild", &child2.id, 0)
-				grandchild.ChangeStatus(StatusTODO)
-				repo.Save(grandchild)
+				_ = grandchild.ChangeStatus(StatusTODO)
+				_ = repo.Save(grandchild)
 
 				return child2.ID()
 			},
@@ -151,18 +151,18 @@ func TestReadinessEvaluatorService_EvaluateReadiness(t *testing.T) {
 			name: "task with left sibling DONE but incomplete children is not ready",
 			setupTree: func(repo TaskRepository) TaskID {
 				root, _ := NewTask("Root", nil, 0)
-				repo.Save(root)
+				_ = repo.Save(root)
 
 				child1, _ := NewTask("Child 1", &root.id, 0)
-				child1.ChangeStatus(StatusDONE)
-				repo.Save(child1)
+				_ = child1.ChangeStatus(StatusDONE)
+				_ = repo.Save(child1)
 
 				child2, _ := NewTask("Child 2", &root.id, 1)
-				repo.Save(child2)
+				_ = repo.Save(child2)
 
 				grandchild, _ := NewTask("Grandchild", &child2.id, 0)
-				grandchild.ChangeStatus(StatusInProgress)
-				repo.Save(grandchild)
+				_ = grandchild.ChangeStatus(StatusInProgress)
+				_ = repo.Save(grandchild)
 
 				return child2.ID()
 			},
@@ -175,18 +175,18 @@ func TestReadinessEvaluatorService_EvaluateReadiness(t *testing.T) {
 			name: "rightmost child with left sibling DONE is ready",
 			setupTree: func(repo TaskRepository) TaskID {
 				root, _ := NewTask("Root", nil, 0)
-				repo.Save(root)
+				_ = repo.Save(root)
 
 				child1, _ := NewTask("Child 1", &root.id, 0)
-				child1.ChangeStatus(StatusDONE)
-				repo.Save(child1)
+				_ = child1.ChangeStatus(StatusDONE)
+				_ = repo.Save(child1)
 
 				child2, _ := NewTask("Child 2", &root.id, 1)
-				child2.ChangeStatus(StatusDONE)
-				repo.Save(child2)
+				_ = child2.ChangeStatus(StatusDONE)
+				_ = repo.Save(child2)
 
 				child3, _ := NewTask("Child 3", &root.id, 2)
-				repo.Save(child3)
+				_ = repo.Save(child3)
 
 				return child3.ID()
 			},
@@ -272,31 +272,31 @@ func TestReadinessEvaluatorService_EvaluateReadiness_ComplexTree(t *testing.T) {
 	// Status: A=DONE, D=DONE, E=DONE, B=TODO, F=TODO, C=TODO
 
 	root, _ := NewTask("Root", nil, 0)
-	repo.Save(root)
+	_ = repo.Save(root)
 
 	taskA, _ := NewTask("A", &root.id, 0)
-	taskA.ChangeStatus(StatusDONE)
-	repo.Save(taskA)
+	_ = taskA.ChangeStatus(StatusDONE)
+	_ = repo.Save(taskA)
 
 	taskB, _ := NewTask("B", &root.id, 1)
-	taskB.ChangeStatus(StatusTODO)
-	repo.Save(taskB)
+	_ = taskB.ChangeStatus(StatusTODO)
+	_ = repo.Save(taskB)
 
 	taskC, _ := NewTask("C", &root.id, 2)
-	taskC.ChangeStatus(StatusTODO)
-	repo.Save(taskC)
+	_ = taskC.ChangeStatus(StatusTODO)
+	_ = repo.Save(taskC)
 
 	taskD, _ := NewTask("D", &taskA.id, 0)
-	taskD.ChangeStatus(StatusDONE)
-	repo.Save(taskD)
+	_ = taskD.ChangeStatus(StatusDONE)
+	_ = repo.Save(taskD)
 
 	taskE, _ := NewTask("E", &taskA.id, 1)
-	taskE.ChangeStatus(StatusDONE)
-	repo.Save(taskE)
+	_ = taskE.ChangeStatus(StatusDONE)
+	_ = repo.Save(taskE)
 
 	taskF, _ := NewTask("F", &taskB.id, 0)
-	taskF.ChangeStatus(StatusTODO)
-	repo.Save(taskF)
+	_ = taskF.ChangeStatus(StatusTODO)
+	_ = repo.Save(taskF)
 
 	// Test evaluations
 	tests := []struct {
