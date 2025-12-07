@@ -6,7 +6,7 @@
   - Add error wrapping utilities for OS errors
   - _Requirements: 3.4, 4.3, 4.4_
 
-- [ ] 2. Implement TaskDTO for JSON serialization
+- [x] 2. Implement TaskDTO for JSON serialization
   - Create `TaskDTO` struct with JSON tags
   - Implement `ToDTO(task *Task)` function to convert Task to DTO
   - Implement `FromDTO(dto TaskDTO)` function to convert DTO to Task

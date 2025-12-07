@@ -148,12 +148,12 @@ func (v *taskValidator) isDescendant(ancestor TaskID, potentialDescendant TaskID
 		}
 
 		// If the parent is the ancestor, potentialDescendant is a descendant
-		if parentID.Equals(ancestor) {
+		if parentId.Equals(ancestor) {
 			return true
 		}
 
 		// Move up to the parent
-		current = *parentId()
+		current = *parentId
 	}
 }
 
