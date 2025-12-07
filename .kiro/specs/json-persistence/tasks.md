@@ -87,7 +87,7 @@
   - **Property 10: FindByParentID ordering**
   - **Validates: Requirements 5.2**
 
-- [ ] 7. Implement Delete method
+- [x] 7. Implement Delete method
   - Implement `Delete(id TaskID)` for single task deletion
   - Remove task from in-memory map
   - Call `persist()` to write changes

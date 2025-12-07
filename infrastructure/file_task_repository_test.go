@@ -824,3 +824,167 @@ func TestFindByParentID_OrderingWithGaps(t *testing.T) {
 		t.Errorf("expected 'Child at 5' third, got '%s'", children[2].Description())
 	}
 }
+
+// TestDelete_ExistingTask tests deleting an existing task
+func TestDelete_ExistingTask(t *testing.T) {
+	testPath := "./test_data/delete_existing.json"
+	os.RemoveAll("./test_data")
+	defer os.RemoveAll("./test_data")
+
+	repo, _ := NewFileTaskRepository(testPath)
+	
+	// Create and save a task
+	task, _ := domain.NewTask("Task to Delete", nil, 0)
+	repo.Save(task)
+
+	// Verify task exists
+	if len(repo.tasks) != 1 {
+		t.Fatalf("expected 1 task before delete, got %d", len(repo.tasks))
+	}
+
+	// Delete the task
+	err := repo.Delete(task.ID())
+	if err != nil {
+		t.Fatalf("expected no error deleting task, got %v", err)
+	}
+
+	// Verify task is removed from memory
+	if len(repo.tasks) != 0 {
+		t.Errorf("expected 0 tasks after delete, got %d", len(repo.tasks))
+	}
+
+	// Verify task cannot be found
+	_, err = repo.FindByID(task.ID())
+	if err == nil {
+		t.Error("expected NotFoundError after delete, got nil")
+	}
+	if _, ok := err.(domain.NotFoundError); !ok {
+		t.Errorf("expected NotFoundError, got %T", err)
+	}
+
+	// Verify deletion was persisted to file
+	repo2, _ := NewFileTaskRepository(testPath)
+	if len(repo2.tasks) != 0 {
+		t.Errorf("expected 0 tasks in file after delete, got %d", len(repo2.tasks))
+	}
+}
+
+// TestDelete_NonExistentTask tests deleting a non-existent task
+func TestDelete_NonExistentTask(t *testing.T) {
+	testPath := "./test_data/delete_nonexistent.json"
+	os.RemoveAll("./test_data")
+	defer os.RemoveAll("./test_data")
+
+	repo, _ := NewFileTaskRepository(testPath)
+	
+	// Try to delete a non-existent task
+	nonExistentID := domain.NewTaskID()
+	err := repo.Delete(nonExistentID)
+	
+	if err == nil {
+		t.Fatal("expected NotFoundError, got nil")
+	}
+
+	if _, ok := err.(domain.NotFoundError); !ok {
+		t.Errorf("expected NotFoundError, got %T", err)
+	}
+}
+
+// TestDelete_OneOfMultipleTasks tests deleting one task when multiple exist
+func TestDelete_OneOfMultipleTasks(t *testing.T) {
+	testPath := "./test_data/delete_one_of_many.json"
+	os.RemoveAll("./test_data")
+	defer os.RemoveAll("./test_data")
+
+	repo, _ := NewFileTaskRepository(testPath)
+	
+	// Create and save multiple tasks
+	task1, _ := domain.NewTask("Task 1", nil, 0)
+	task2, _ := domain.NewTask("Task 2", nil, 1)
+	task3, _ := domain.NewTask("Task 3", nil, 2)
+	
+	repo.Save(task1)
+	repo.Save(task2)
+	repo.Save(task3)
+
+	// Delete task2
+	err := repo.Delete(task2.ID())
+	if err != nil {
+		t.Fatalf("expected no error deleting task, got %v", err)
+	}
+
+	// Verify only task2 is removed
+	if len(repo.tasks) != 2 {
+		t.Errorf("expected 2 tasks after delete, got %d", len(repo.tasks))
+	}
+
+	// Verify task1 and task3 still exist
+	_, err = repo.FindByID(task1.ID())
+	if err != nil {
+		t.Error("expected task1 to still exist")
+	}
+
+	_, err = repo.FindByID(task3.ID())
+	if err != nil {
+		t.Error("expected task3 to still exist")
+	}
+
+	// Verify task2 is gone
+	_, err = repo.FindByID(task2.ID())
+	if err == nil {
+		t.Error("expected task2 to be deleted")
+	}
+
+	// Verify deletion was persisted to file
+	repo2, _ := NewFileTaskRepository(testPath)
+	if len(repo2.tasks) != 2 {
+		t.Errorf("expected 2 tasks in file after delete, got %d", len(repo2.tasks))
+	}
+}
+
+// TestDelete_DoesNotDeleteChildren tests that Delete only removes the specified task, not its children
+func TestDelete_DoesNotDeleteChildren(t *testing.T) {
+	testPath := "./test_data/delete_parent_keeps_children.json"
+	os.RemoveAll("./test_data")
+	defer os.RemoveAll("./test_data")
+
+	repo, _ := NewFileTaskRepository(testPath)
+	
+	// Create parent and children
+	parent, _ := domain.NewTask("Parent", nil, 0)
+	parentID := parent.ID()
+	child1, _ := domain.NewTask("Child 1", &parentID, 0)
+	child2, _ := domain.NewTask("Child 2", &parentID, 1)
+	
+	repo.Save(parent)
+	repo.Save(child1)
+	repo.Save(child2)
+
+	// Delete parent
+	err := repo.Delete(parent.ID())
+	if err != nil {
+		t.Fatalf("expected no error deleting parent, got %v", err)
+	}
+
+	// Verify parent is removed but children remain
+	if len(repo.tasks) != 2 {
+		t.Errorf("expected 2 tasks (children) after delete, got %d", len(repo.tasks))
+	}
+
+	// Verify parent is gone
+	_, err = repo.FindByID(parent.ID())
+	if err == nil {
+		t.Error("expected parent to be deleted")
+	}
+
+	// Verify children still exist
+	_, err = repo.FindByID(child1.ID())
+	if err != nil {
+		t.Error("expected child1 to still exist")
+	}
+
+	_, err = repo.FindByID(child2.ID())
+	if err != nil {
+		t.Error("expected child2 to still exist")
+	}
+}

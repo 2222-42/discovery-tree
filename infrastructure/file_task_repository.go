@@ -204,8 +204,21 @@ func (r *FileTaskRepository) FindAll() ([]*domain.Task, error) {
 
 // Delete removes a task by its ID
 func (r *FileTaskRepository) Delete(id domain.TaskID) error {
-	// TODO: Implement in task 7
-	return nil
+	// Use write lock for thread safety
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	// Check if task exists
+	idStr := id.String()
+	if _, exists := r.tasks[idStr]; !exists {
+		return domain.NewNotFoundError("Task", idStr)
+	}
+
+	// Remove task from in-memory map
+	delete(r.tasks, idStr)
+
+	// Call persist() to write changes
+	return r.persist()
 }
 
 // DeleteSubtree removes a task and all its descendants
