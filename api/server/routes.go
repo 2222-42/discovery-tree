@@ -2,9 +2,12 @@ package server
 
 import (
 	"discovery-tree/api/container"
+	_ "discovery-tree/docs" // Import generated docs
 	"log/slog"
 
 	"github.com/gin-gonic/gin"
+	ginSwagger "github.com/swaggo/gin-swagger"
+	swaggerFiles "github.com/swaggo/files"
 )
 
 // RouteConfig holds configuration for route setup
@@ -22,6 +25,7 @@ func SetupRoutes(engine *gin.Engine, container *container.Container) {
 	
 	setupHealthRoutes(engine, container)
 	setupAPIRoutes(engine, container, config)
+	setupSwaggerRoutes(engine, config)
 	
 	slog.Info("All routes configured successfully",
 		slog.Int("total_routes", len(engine.Routes())),
@@ -84,6 +88,25 @@ func setupTaskRoutes(apiGroup *gin.RouterGroup, container *container.Container) 
 	
 	slog.Debug("Task routes configured",
 		slog.Int("task_routes", 9), // Number of task-related routes
+	)
+}
+
+// setupSwaggerRoutes configures Swagger documentation routes
+func setupSwaggerRoutes(engine *gin.Engine, config *RouteConfig) {
+	if !config.EnableSwagger {
+		slog.Debug("Swagger documentation disabled")
+		return
+	}
+	
+	// API documentation group
+	apiGroup := engine.Group("/api/" + config.APIVersion)
+	
+	// Swagger UI endpoint (this serves both the UI and the JSON)
+	apiGroup.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	
+	slog.Debug("Swagger routes configured",
+		slog.String("swagger_ui", "/api/"+config.APIVersion+"/docs/index.html"),
+		slog.String("swagger_json", "/api/"+config.APIVersion+"/docs/doc.json"),
 	)
 }
 

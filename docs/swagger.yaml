@@ -1,0 +1,444 @@
+basePath: /
+definitions:
+  models.CreateChildTaskRequest:
+    properties:
+      description:
+        minLength: 1
+        type: string
+      parentId:
+        type: string
+    required:
+    - description
+    - parentId
+    type: object
+  models.CreateRootTaskRequest:
+    properties:
+      description:
+        minLength: 1
+        type: string
+    required:
+    - description
+    type: object
+  models.ErrorResponse:
+    properties:
+      code:
+        type: string
+      error:
+        type: string
+      message:
+        type: string
+    type: object
+  models.MoveTaskRequest:
+    properties:
+      parentId:
+        type: string
+      position:
+        minimum: 0
+        type: integer
+    type: object
+  models.TaskResponse:
+    properties:
+      createdAt:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      parentId:
+        type: string
+      position:
+        type: integer
+      status:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  models.UpdateStatusRequest:
+    properties:
+      status:
+        enum:
+        - TODO
+        - In Progress
+        - DONE
+        - Blocked
+        - Root Work Item
+        type: string
+    required:
+    - status
+    type: object
+  models.UpdateTaskRequest:
+    properties:
+      description:
+        minLength: 1
+        type: string
+    required:
+    - description
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: REST API for the Discovery Tree task management system. Provides endpoints
+    to create, read, update, and delete tasks in a hierarchical tree structure.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: Discovery Tree API
+  version: "1.0"
+paths:
+  /api/v1/tasks:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all tasks in the discovery tree
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved all tasks
+          schema:
+            items:
+              $ref: '#/definitions/models.TaskResponse'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get all tasks
+      tags:
+      - tasks
+    post:
+      consumes:
+      - application/json
+      description: Creates a new child task under the specified parent task
+      parameters:
+      - description: Child task creation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateChildTaskRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Successfully created child task
+          schema:
+            $ref: '#/definitions/models.TaskResponse'
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Parent task not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Create child task
+      tags:
+      - tasks
+  /api/v1/tasks/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a task and all its descendants. Adjusts sibling positions
+        automatically.
+      parameters:
+      - description: Task ID (UUID format)
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Successfully deleted task
+        "400":
+          description: Invalid task ID format
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Task not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Delete task
+      tags:
+      - tasks
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a specific task by its unique identifier
+      parameters:
+      - description: Task ID (UUID format)
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved task
+          schema:
+            $ref: '#/definitions/models.TaskResponse'
+        "400":
+          description: Invalid task ID format
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Task not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get task by ID
+      tags:
+      - tasks
+    put:
+      consumes:
+      - application/json
+      description: Updates the description of an existing task
+      parameters:
+      - description: Task ID (UUID format)
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Task update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateTaskRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully updated task
+          schema:
+            $ref: '#/definitions/models.TaskResponse'
+        "400":
+          description: Invalid request data or task ID format
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Task not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Update task description
+      tags:
+      - tasks
+  /api/v1/tasks/{id}/children:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all child tasks of the specified parent task, ordered
+        by position
+      parameters:
+      - description: Parent task ID (UUID format)
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved child tasks
+          schema:
+            items:
+              $ref: '#/definitions/models.TaskResponse'
+            type: array
+        "400":
+          description: Invalid task ID format
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Parent task not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get task children
+      tags:
+      - tasks
+  /api/v1/tasks/{id}/move:
+    put:
+      consumes:
+      - application/json
+      description: Moves a task to a new position or under a different parent task
+      parameters:
+      - description: Task ID (UUID format)
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Move task request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.MoveTaskRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully moved task
+          schema:
+            $ref: '#/definitions/models.TaskResponse'
+        "400":
+          description: Invalid request data, task ID format, or would create cycle
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Task or parent task not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Move task
+      tags:
+      - tasks
+  /api/v1/tasks/{id}/status:
+    put:
+      consumes:
+      - application/json
+      description: Updates the status of an existing task
+      parameters:
+      - description: Task ID (UUID format)
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Status update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully updated task status
+          schema:
+            $ref: '#/definitions/models.TaskResponse'
+        "400":
+          description: Invalid request data, task ID format, or status value
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Task not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Update task status
+      tags:
+      - tasks
+  /api/v1/tasks/root:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the root task of the discovery tree
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved root task
+          schema:
+            $ref: '#/definitions/models.TaskResponse'
+        "404":
+          description: Root task not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get root task
+      tags:
+      - tasks
+    post:
+      consumes:
+      - application/json
+      description: Creates a new root task for the discovery tree. Only one root task
+        can exist at a time.
+      parameters:
+      - description: Root task creation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateRootTaskRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Successfully created root task
+          schema:
+            $ref: '#/definitions/models.TaskResponse'
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "409":
+          description: Root task already exists
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Create root task
+      tags:
+      - tasks
+  /health:
+    get:
+      consumes:
+      - application/json
+      description: Returns the health status of the Discovery Tree API
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: API is healthy
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Health check
+      tags:
+      - health
+schemes:
+- http
+- https
+swagger: "2.0"

@@ -24,7 +24,17 @@ func NewTaskHandler(taskService *domain.TaskService, taskRepository domain.TaskR
 }
 
 // CreateRootTask creates a new root task
-// POST /api/v1/tasks/root
+// @Summary Create root task
+// @Description Creates a new root task for the discovery tree. Only one root task can exist at a time.
+// @Tags tasks
+// @Accept json
+// @Produce json
+// @Param request body models.CreateRootTaskRequest true "Root task creation request"
+// @Success 201 {object} models.TaskResponse "Successfully created root task"
+// @Failure 400 {object} models.ErrorResponse "Invalid request data"
+// @Failure 409 {object} models.ErrorResponse "Root task already exists"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Router /api/v1/tasks/root [post]
 func (h *TaskHandler) CreateRootTask(c *gin.Context) {
 	var req models.CreateRootTaskRequest
 	
@@ -46,7 +56,17 @@ func (h *TaskHandler) CreateRootTask(c *gin.Context) {
 }
 
 // CreateChildTask creates a new child task
-// POST /api/v1/tasks
+// @Summary Create child task
+// @Description Creates a new child task under the specified parent task
+// @Tags tasks
+// @Accept json
+// @Produce json
+// @Param request body models.CreateChildTaskRequest true "Child task creation request"
+// @Success 201 {object} models.TaskResponse "Successfully created child task"
+// @Failure 400 {object} models.ErrorResponse "Invalid request data"
+// @Failure 404 {object} models.ErrorResponse "Parent task not found"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Router /api/v1/tasks [post]
 func (h *TaskHandler) CreateChildTask(c *gin.Context) {
 	var req models.CreateChildTaskRequest
 	
@@ -75,7 +95,17 @@ func (h *TaskHandler) CreateChildTask(c *gin.Context) {
 }
 
 // GetTask retrieves a specific task by ID
-// GET /api/v1/tasks/{id}
+// @Summary Get task by ID
+// @Description Retrieves a specific task by its unique identifier
+// @Tags tasks
+// @Accept json
+// @Produce json
+// @Param id path string true "Task ID (UUID format)" format(uuid)
+// @Success 200 {object} models.TaskResponse "Successfully retrieved task"
+// @Failure 400 {object} models.ErrorResponse "Invalid task ID format"
+// @Failure 404 {object} models.ErrorResponse "Task not found"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Router /api/v1/tasks/{id} [get]
 func (h *TaskHandler) GetTask(c *gin.Context) {
 	idParam := c.Param("id")
 	
@@ -104,7 +134,14 @@ func (h *TaskHandler) GetTask(c *gin.Context) {
 }
 
 // GetAllTasks retrieves all tasks
-// GET /api/v1/tasks
+// @Summary Get all tasks
+// @Description Retrieves all tasks in the discovery tree
+// @Tags tasks
+// @Accept json
+// @Produce json
+// @Success 200 {array} models.TaskResponse "Successfully retrieved all tasks"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Router /api/v1/tasks [get]
 func (h *TaskHandler) GetAllTasks(c *gin.Context) {
 	// Find all tasks using the repository
 	tasks, err := h.taskRepository.FindAll()
@@ -123,7 +160,15 @@ func (h *TaskHandler) GetAllTasks(c *gin.Context) {
 }
 
 // GetRootTask retrieves the root task
-// GET /api/v1/tasks/root
+// @Summary Get root task
+// @Description Retrieves the root task of the discovery tree
+// @Tags tasks
+// @Accept json
+// @Produce json
+// @Success 200 {object} models.TaskResponse "Successfully retrieved root task"
+// @Failure 404 {object} models.ErrorResponse "Root task not found"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Router /api/v1/tasks/root [get]
 func (h *TaskHandler) GetRootTask(c *gin.Context) {
 	// Find the root task using the repository
 	task, err := h.taskRepository.FindRoot()
@@ -138,7 +183,17 @@ func (h *TaskHandler) GetRootTask(c *gin.Context) {
 }
 
 // GetTaskChildren retrieves children of a specific task
-// GET /api/v1/tasks/{id}/children
+// @Summary Get task children
+// @Description Retrieves all child tasks of the specified parent task, ordered by position
+// @Tags tasks
+// @Accept json
+// @Produce json
+// @Param id path string true "Parent task ID (UUID format)" format(uuid)
+// @Success 200 {array} models.TaskResponse "Successfully retrieved child tasks"
+// @Failure 400 {object} models.ErrorResponse "Invalid task ID format"
+// @Failure 404 {object} models.ErrorResponse "Parent task not found"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Router /api/v1/tasks/{id}/children [get]
 func (h *TaskHandler) GetTaskChildren(c *gin.Context) {
 	idParam := c.Param("id")
 	
@@ -178,7 +233,18 @@ func (h *TaskHandler) GetTaskChildren(c *gin.Context) {
 }
 
 // UpdateTask updates a task's description
-// PUT /api/v1/tasks/{id}
+// @Summary Update task description
+// @Description Updates the description of an existing task
+// @Tags tasks
+// @Accept json
+// @Produce json
+// @Param id path string true "Task ID (UUID format)" format(uuid)
+// @Param request body models.UpdateTaskRequest true "Task update request"
+// @Success 200 {object} models.TaskResponse "Successfully updated task"
+// @Failure 400 {object} models.ErrorResponse "Invalid request data or task ID format"
+// @Failure 404 {object} models.ErrorResponse "Task not found"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Router /api/v1/tasks/{id} [put]
 func (h *TaskHandler) UpdateTask(c *gin.Context) {
 	idParam := c.Param("id")
 	var req models.UpdateTaskRequest
@@ -227,7 +293,18 @@ func (h *TaskHandler) UpdateTask(c *gin.Context) {
 }
 
 // UpdateTaskStatus updates a task's status
-// PUT /api/v1/tasks/{id}/status
+// @Summary Update task status
+// @Description Updates the status of an existing task
+// @Tags tasks
+// @Accept json
+// @Produce json
+// @Param id path string true "Task ID (UUID format)" format(uuid)
+// @Param request body models.UpdateStatusRequest true "Status update request"
+// @Success 200 {object} models.TaskResponse "Successfully updated task status"
+// @Failure 400 {object} models.ErrorResponse "Invalid request data, task ID format, or status value"
+// @Failure 404 {object} models.ErrorResponse "Task not found"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Router /api/v1/tasks/{id}/status [put]
 func (h *TaskHandler) UpdateTaskStatus(c *gin.Context) {
 	idParam := c.Param("id")
 	var req models.UpdateStatusRequest
@@ -276,7 +353,18 @@ func (h *TaskHandler) UpdateTaskStatus(c *gin.Context) {
 }
 
 // MoveTask moves a task to a new position or parent
-// PUT /api/v1/tasks/{id}/move
+// @Summary Move task
+// @Description Moves a task to a new position or under a different parent task
+// @Tags tasks
+// @Accept json
+// @Produce json
+// @Param id path string true "Task ID (UUID format)" format(uuid)
+// @Param request body models.MoveTaskRequest true "Move task request"
+// @Success 200 {object} models.TaskResponse "Successfully moved task"
+// @Failure 400 {object} models.ErrorResponse "Invalid request data, task ID format, or would create cycle"
+// @Failure 404 {object} models.ErrorResponse "Task or parent task not found"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Router /api/v1/tasks/{id}/move [put]
 func (h *TaskHandler) MoveTask(c *gin.Context) {
 	idParam := c.Param("id")
 	var req models.MoveTaskRequest
@@ -334,7 +422,17 @@ func (h *TaskHandler) MoveTask(c *gin.Context) {
 }
 
 // DeleteTask deletes a task
-// DELETE /api/v1/tasks/{id}
+// @Summary Delete task
+// @Description Deletes a task and all its descendants. Adjusts sibling positions automatically.
+// @Tags tasks
+// @Accept json
+// @Produce json
+// @Param id path string true "Task ID (UUID format)" format(uuid)
+// @Success 204 "Successfully deleted task"
+// @Failure 400 {object} models.ErrorResponse "Invalid task ID format"
+// @Failure 404 {object} models.ErrorResponse "Task not found"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Router /api/v1/tasks/{id} [delete]
 func (h *TaskHandler) DeleteTask(c *gin.Context) {
 	idParam := c.Param("id")
 	

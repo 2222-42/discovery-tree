@@ -15,7 +15,13 @@ func NewHealthHandler() *HealthHandler {
 }
 
 // HealthCheck returns the health status of the API
-// GET /health
+// @Summary Health check
+// @Description Returns the health status of the Discovery Tree API
+// @Tags health
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]interface{} "API is healthy"
+// @Router /health [get]
 func (h *HealthHandler) HealthCheck(c *gin.Context) {
 	response := gin.H{
 		"status":  "healthy",
