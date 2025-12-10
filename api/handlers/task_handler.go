@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"discovery-tree/api/middleware"
 	"discovery-tree/api/models"
 	"discovery-tree/domain"
 	"net/http"
@@ -28,22 +29,14 @@ func (h *TaskHandler) CreateRootTask(c *gin.Context) {
 	var req models.CreateRootTaskRequest
 	
 	// Bind and validate the request
-	if err := c.ShouldBindJSON(&req); err != nil {
-		errorResp := models.ErrorResponse{
-			Error:   "ValidationError",
-			Code:    "INVALID_REQUEST",
-			Message: err.Error(),
-		}
-		c.JSON(http.StatusBadRequest, errorResp)
+	if err := middleware.BindJSON(c, &req); err != nil {
 		return
 	}
 
 	// Create the root task using the service
 	task, err := h.taskService.CreateRootTask(req.Description)
 	if err != nil {
-		errorResp := models.ErrorToResponse(err)
-		statusCode := mapDomainErrorToHTTPStatus(err)
-		c.JSON(statusCode, errorResp)
+		middleware.HandleError(c, err)
 		return
 	}
 
@@ -58,30 +51,21 @@ func (h *TaskHandler) CreateChildTask(c *gin.Context) {
 	var req models.CreateChildTaskRequest
 	
 	// Bind and validate the request
-	if err := c.ShouldBindJSON(&req); err != nil {
-		errorResp := models.ErrorResponse{
-			Error:   "ValidationError",
-			Code:    "INVALID_REQUEST",
-			Message: err.Error(),
-		}
-		c.JSON(http.StatusBadRequest, errorResp)
+	if err := middleware.BindJSON(c, &req); err != nil {
 		return
 	}
 
 	// Convert parent ID string to TaskID
 	parentID, err := domain.TaskIDFromString(req.ParentID)
 	if err != nil {
-		errorResp := models.ErrorToResponse(err)
-		c.JSON(http.StatusBadRequest, errorResp)
+		middleware.HandleError(c, err)
 		return
 	}
 
 	// Create the child task using the service
 	task, err := h.taskService.CreateChildTask(req.Description, parentID)
 	if err != nil {
-		errorResp := models.ErrorToResponse(err)
-		statusCode := mapDomainErrorToHTTPStatus(err)
-		c.JSON(statusCode, errorResp)
+		middleware.HandleError(c, err)
 		return
 	}
 
@@ -95,20 +79,22 @@ func (h *TaskHandler) CreateChildTask(c *gin.Context) {
 func (h *TaskHandler) GetTask(c *gin.Context) {
 	idParam := c.Param("id")
 	
+	// Validate UUID format
+	if err := middleware.ValidateUUID(c, idParam, "id"); err != nil {
+		return
+	}
+	
 	// Convert ID string to TaskID
 	taskID, err := domain.TaskIDFromString(idParam)
 	if err != nil {
-		errorResp := models.ErrorToResponse(err)
-		c.JSON(http.StatusBadRequest, errorResp)
+		middleware.HandleError(c, err)
 		return
 	}
 
 	// Find the task using the repository
 	task, err := h.taskRepository.FindByID(taskID)
 	if err != nil {
-		errorResp := models.ErrorToResponse(err)
-		statusCode := mapDomainErrorToHTTPStatus(err)
-		c.JSON(statusCode, errorResp)
+		middleware.HandleError(c, err)
 		return
 	}
 
@@ -123,9 +109,7 @@ func (h *TaskHandler) GetAllTasks(c *gin.Context) {
 	// Find all tasks using the repository
 	tasks, err := h.taskRepository.FindAll()
 	if err != nil {
-		errorResp := models.ErrorToResponse(err)
-		statusCode := mapDomainErrorToHTTPStatus(err)
-		c.JSON(statusCode, errorResp)
+		middleware.HandleError(c, err)
 		return
 	}
 
@@ -144,9 +128,7 @@ func (h *TaskHandler) GetRootTask(c *gin.Context) {
 	// Find the root task using the repository
 	task, err := h.taskRepository.FindRoot()
 	if err != nil {
-		errorResp := models.ErrorToResponse(err)
-		statusCode := mapDomainErrorToHTTPStatus(err)
-		c.JSON(statusCode, errorResp)
+		middleware.HandleError(c, err)
 		return
 	}
 
@@ -160,29 +142,29 @@ func (h *TaskHandler) GetRootTask(c *gin.Context) {
 func (h *TaskHandler) GetTaskChildren(c *gin.Context) {
 	idParam := c.Param("id")
 	
+	// Validate UUID format
+	if err := middleware.ValidateUUID(c, idParam, "id"); err != nil {
+		return
+	}
+	
 	// Convert ID string to TaskID
 	taskID, err := domain.TaskIDFromString(idParam)
 	if err != nil {
-		errorResp := models.ErrorToResponse(err)
-		c.JSON(http.StatusBadRequest, errorResp)
+		middleware.HandleError(c, err)
 		return
 	}
 
 	// First verify the parent task exists
 	_, err = h.taskRepository.FindByID(taskID)
 	if err != nil {
-		errorResp := models.ErrorToResponse(err)
-		statusCode := mapDomainErrorToHTTPStatus(err)
-		c.JSON(statusCode, errorResp)
+		middleware.HandleError(c, err)
 		return
 	}
 
 	// Find children using the repository
 	children, err := h.taskRepository.FindByParentID(&taskID)
 	if err != nil {
-		errorResp := models.ErrorToResponse(err)
-		statusCode := mapDomainErrorToHTTPStatus(err)
-		c.JSON(statusCode, errorResp)
+		middleware.HandleError(c, err)
 		return
 	}
 
@@ -201,48 +183,41 @@ func (h *TaskHandler) UpdateTask(c *gin.Context) {
 	idParam := c.Param("id")
 	var req models.UpdateTaskRequest
 	
+	// Validate UUID format
+	if err := middleware.ValidateUUID(c, idParam, "id"); err != nil {
+		return
+	}
+	
 	// Bind and validate the request
-	if err := c.ShouldBindJSON(&req); err != nil {
-		errorResp := models.ErrorResponse{
-			Error:   "ValidationError",
-			Code:    "INVALID_REQUEST",
-			Message: err.Error(),
-		}
-		c.JSON(http.StatusBadRequest, errorResp)
+	if err := middleware.BindJSON(c, &req); err != nil {
 		return
 	}
 
 	// Convert ID string to TaskID
 	taskID, err := domain.TaskIDFromString(idParam)
 	if err != nil {
-		errorResp := models.ErrorToResponse(err)
-		c.JSON(http.StatusBadRequest, errorResp)
+		middleware.HandleError(c, err)
 		return
 	}
 
 	// Find the task first
 	task, err := h.taskRepository.FindByID(taskID)
 	if err != nil {
-		errorResp := models.ErrorToResponse(err)
-		statusCode := mapDomainErrorToHTTPStatus(err)
-		c.JSON(statusCode, errorResp)
+		middleware.HandleError(c, err)
 		return
 	}
 
 	// Update the description
 	err = task.UpdateDescription(req.Description)
 	if err != nil {
-		errorResp := models.ErrorToResponse(err)
-		c.JSON(http.StatusBadRequest, errorResp)
+		middleware.HandleError(c, err)
 		return
 	}
 
 	// Save the updated task
 	err = h.taskRepository.Save(task)
 	if err != nil {
-		errorResp := models.ErrorToResponse(err)
-		statusCode := mapDomainErrorToHTTPStatus(err)
-		c.JSON(statusCode, errorResp)
+		middleware.HandleError(c, err)
 		return
 	}
 
@@ -257,48 +232,41 @@ func (h *TaskHandler) UpdateTaskStatus(c *gin.Context) {
 	idParam := c.Param("id")
 	var req models.UpdateStatusRequest
 	
+	// Validate UUID format
+	if err := middleware.ValidateUUID(c, idParam, "id"); err != nil {
+		return
+	}
+	
 	// Bind and validate the request
-	if err := c.ShouldBindJSON(&req); err != nil {
-		errorResp := models.ErrorResponse{
-			Error:   "ValidationError",
-			Code:    "INVALID_REQUEST",
-			Message: err.Error(),
-		}
-		c.JSON(http.StatusBadRequest, errorResp)
+	if err := middleware.BindJSON(c, &req); err != nil {
 		return
 	}
 
 	// Convert ID string to TaskID
 	taskID, err := domain.TaskIDFromString(idParam)
 	if err != nil {
-		errorResp := models.ErrorToResponse(err)
-		c.JSON(http.StatusBadRequest, errorResp)
+		middleware.HandleError(c, err)
 		return
 	}
 
 	// Convert status string to Status
 	status, err := domain.NewStatus(req.Status)
 	if err != nil {
-		errorResp := models.ErrorToResponse(err)
-		c.JSON(http.StatusBadRequest, errorResp)
+		middleware.HandleError(c, err)
 		return
 	}
 
 	// Update the status using the service (includes validation)
 	err = h.taskService.ChangeTaskStatus(taskID, status)
 	if err != nil {
-		errorResp := models.ErrorToResponse(err)
-		statusCode := mapDomainErrorToHTTPStatus(err)
-		c.JSON(statusCode, errorResp)
+		middleware.HandleError(c, err)
 		return
 	}
 
 	// Retrieve the updated task to return
 	task, err := h.taskRepository.FindByID(taskID)
 	if err != nil {
-		errorResp := models.ErrorToResponse(err)
-		statusCode := mapDomainErrorToHTTPStatus(err)
-		c.JSON(statusCode, errorResp)
+		middleware.HandleError(c, err)
 		return
 	}
 
@@ -313,32 +281,34 @@ func (h *TaskHandler) MoveTask(c *gin.Context) {
 	idParam := c.Param("id")
 	var req models.MoveTaskRequest
 	
+	// Validate UUID format
+	if err := middleware.ValidateUUID(c, idParam, "id"); err != nil {
+		return
+	}
+	
 	// Bind and validate the request
-	if err := c.ShouldBindJSON(&req); err != nil {
-		errorResp := models.ErrorResponse{
-			Error:   "ValidationError",
-			Code:    "INVALID_REQUEST",
-			Message: err.Error(),
-		}
-		c.JSON(http.StatusBadRequest, errorResp)
+	if err := middleware.BindJSON(c, &req); err != nil {
 		return
 	}
 
 	// Convert ID string to TaskID
 	taskID, err := domain.TaskIDFromString(idParam)
 	if err != nil {
-		errorResp := models.ErrorToResponse(err)
-		c.JSON(http.StatusBadRequest, errorResp)
+		middleware.HandleError(c, err)
 		return
 	}
 
 	// Convert parent ID string to TaskID if provided
 	var newParentID *domain.TaskID
 	if req.ParentID != nil {
+		// Validate parent UUID format if provided
+		if err := middleware.ValidateUUID(c, *req.ParentID, "parentId"); err != nil {
+			return
+		}
+		
 		parentID, err := domain.TaskIDFromString(*req.ParentID)
 		if err != nil {
-			errorResp := models.ErrorToResponse(err)
-			c.JSON(http.StatusBadRequest, errorResp)
+			middleware.HandleError(c, err)
 			return
 		}
 		newParentID = &parentID
@@ -347,18 +317,14 @@ func (h *TaskHandler) MoveTask(c *gin.Context) {
 	// Move the task using the service (includes validation and position adjustments)
 	err = h.taskService.MoveTask(taskID, newParentID, req.Position)
 	if err != nil {
-		errorResp := models.ErrorToResponse(err)
-		statusCode := mapDomainErrorToHTTPStatus(err)
-		c.JSON(statusCode, errorResp)
+		middleware.HandleError(c, err)
 		return
 	}
 
 	// Retrieve the updated task to return
 	task, err := h.taskRepository.FindByID(taskID)
 	if err != nil {
-		errorResp := models.ErrorToResponse(err)
-		statusCode := mapDomainErrorToHTTPStatus(err)
-		c.JSON(statusCode, errorResp)
+		middleware.HandleError(c, err)
 		return
 	}
 
@@ -372,20 +338,22 @@ func (h *TaskHandler) MoveTask(c *gin.Context) {
 func (h *TaskHandler) DeleteTask(c *gin.Context) {
 	idParam := c.Param("id")
 	
+	// Validate UUID format
+	if err := middleware.ValidateUUID(c, idParam, "id"); err != nil {
+		return
+	}
+	
 	// Convert ID string to TaskID
 	taskID, err := domain.TaskIDFromString(idParam)
 	if err != nil {
-		errorResp := models.ErrorToResponse(err)
-		c.JSON(http.StatusBadRequest, errorResp)
+		middleware.HandleError(c, err)
 		return
 	}
 
 	// Delete the task using the service (includes cascading deletion and position adjustments)
 	err = h.taskService.DeleteTask(taskID)
 	if err != nil {
-		errorResp := models.ErrorToResponse(err)
-		statusCode := mapDomainErrorToHTTPStatus(err)
-		c.JSON(statusCode, errorResp)
+		middleware.HandleError(c, err)
 		return
 	}
 
@@ -393,16 +361,3 @@ func (h *TaskHandler) DeleteTask(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-// mapDomainErrorToHTTPStatus maps domain errors to appropriate HTTP status codes
-func mapDomainErrorToHTTPStatus(err error) int {
-	switch err.(type) {
-	case domain.ValidationError:
-		return http.StatusBadRequest
-	case domain.NotFoundError:
-		return http.StatusNotFound
-	case domain.ConstraintViolationError:
-		return http.StatusConflict
-	default:
-		return http.StatusInternalServerError
-	}
-}
