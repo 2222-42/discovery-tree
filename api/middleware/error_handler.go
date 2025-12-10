@@ -4,6 +4,7 @@ import (
 	"discovery-tree/api/models"
 	"discovery-tree/domain"
 	"discovery-tree/infrastructure"
+	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -14,9 +15,26 @@ func ErrorHandler() gin.HandlerFunc {
 	return gin.CustomRecovery(func(c *gin.Context, recovered interface{}) {
 		if err, ok := recovered.(error); ok {
 			statusCode, errorResp := MapDomainError(err)
+			
+			// Log the error with structured logging
+			slog.Error("Request error recovered",
+				slog.String("method", c.Request.Method),
+				slog.String("path", c.Request.URL.Path),
+				slog.String("error", err.Error()),
+				slog.Int("status", statusCode),
+				slog.String("client_ip", c.ClientIP()),
+			)
+			
 			c.JSON(statusCode, errorResp)
 		} else {
 			// Handle non-error panics
+			slog.Error("Non-error panic recovered",
+				slog.String("method", c.Request.Method),
+				slog.String("path", c.Request.URL.Path),
+				slog.Any("recovered", recovered),
+				slog.String("client_ip", c.ClientIP()),
+			)
+			
 			errorResp := models.ErrorResponse{
 				Error:   "InternalServerError",
 				Code:    "PANIC_RECOVERED",
@@ -67,5 +85,15 @@ func MapDomainError(err error) (int, models.ErrorResponse) {
 // HandleError is a helper function that handlers can use to consistently handle errors
 func HandleError(c *gin.Context, err error) {
 	statusCode, errorResp := MapDomainError(err)
+	
+	// Log the error with structured logging
+	slog.Error("Handler error",
+		slog.String("method", c.Request.Method),
+		slog.String("path", c.Request.URL.Path),
+		slog.String("error", err.Error()),
+		slog.Int("status", statusCode),
+		slog.String("client_ip", c.ClientIP()),
+	)
+	
 	c.JSON(statusCode, errorResp)
 }

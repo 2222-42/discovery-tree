@@ -76,6 +76,10 @@ func TestHandleError(t *testing.T) {
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	
+	// Add a proper HTTP request to the context
+	req, _ := http.NewRequest("GET", "/test", nil)
+	c.Request = req
+	
 	err := domain.NewValidationError("description", "cannot be empty")
 	HandleError(c, err)
 	

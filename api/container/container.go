@@ -4,8 +4,10 @@ import (
 	"discovery-tree/domain"
 	"discovery-tree/infrastructure"
 	"fmt"
+	"log/slog"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -114,6 +116,48 @@ type Container struct {
 	shutdown    bool
 }
 
+// configureSlog sets up structured logging based on the configuration
+func configureSlog(config *Config) error {
+	// Parse log level from configuration
+	var level slog.Level
+	switch strings.ToLower(config.LogLevel) {
+	case "debug":
+		level = slog.LevelDebug
+	case "info":
+		level = slog.LevelInfo
+	case "warn", "warning":
+		level = slog.LevelWarn
+	case "error":
+		level = slog.LevelError
+	default:
+		level = slog.LevelInfo // Default to info level
+	}
+
+	// Create a new slog handler with the configured level
+	opts := &slog.HandlerOptions{
+		Level: level,
+	}
+
+	// Use JSON handler for structured logging in production, text handler for development
+	var handler slog.Handler
+	if gin.Mode() == gin.ReleaseMode {
+		handler = slog.NewJSONHandler(os.Stdout, opts)
+	} else {
+		handler = slog.NewTextHandler(os.Stdout, opts)
+	}
+
+	// Set the default logger
+	logger := slog.New(handler)
+	slog.SetDefault(logger)
+
+	slog.Info("Logging configured",
+		slog.String("level", level.String()),
+		slog.String("mode", gin.Mode()),
+	)
+
+	return nil
+}
+
 // NewContainer creates and initializes a new dependency injection container
 // It sets up the repository, services, and handlers with proper dependency injection
 func NewContainer(config *Config) (*Container, error) {
@@ -121,9 +165,20 @@ func NewContainer(config *Config) (*Container, error) {
 		return nil, fmt.Errorf("config cannot be nil")
 	}
 
+	// Configure structured logging
+	if err := configureSlog(config); err != nil {
+		return nil, fmt.Errorf("failed to configure logging: %w", err)
+	}
+
+	slog.Info("Initializing container",
+		slog.String("data_path", config.DataPath),
+		slog.String("port", config.Port),
+	)
+
 	// Initialize the task repository with the configured data path
 	taskRepository, err := infrastructure.NewFileTaskRepository(config.DataPath)
 	if err != nil {
+		slog.Error("Failed to initialize task repository", slog.String("error", err.Error()))
 		return nil, fmt.Errorf("failed to initialize task repository: %w", err)
 	}
 
@@ -139,6 +194,7 @@ func NewContainer(config *Config) (*Container, error) {
 		shutdown:       false,
 	}
 
+	slog.Info("Container initialized successfully")
 	return container, nil
 }
 
