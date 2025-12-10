@@ -6,13 +6,13 @@
   - Set up basic Go module configuration for API layer
   - _Requirements: 7.1_
 
-- [ ] 2. Implement API request/response models
-  - [ ] 2.1 Create request models for task operations
+- [x] 2. Implement API request/response models
+  - [x] 2.1 Create request models for task operations
     - Define CreateRootTaskRequest, CreateChildTaskRequest, UpdateTaskRequest, UpdateStatusRequest, MoveTaskRequest structs
     - Add JSON binding tags and validation rules using gin binding
     - _Requirements: 2.2, 8.1_
 
-  - [ ] 2.2 Create response models and converters
+  - [x] 2.2 Create response models and converters
     - Define TaskResponse, ErrorResponse structs with proper JSON tags
     - Implement TaskToResponse converter function from domain.Task to TaskResponse
     - Implement ErrorToResponse converter for domain errors to API error responses
