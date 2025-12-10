@@ -1,6 +1,7 @@
 package container
 
 import (
+	"discovery-tree/api/handlers"
 	"discovery-tree/domain"
 	"discovery-tree/infrastructure"
 	"fmt"
@@ -34,32 +35,7 @@ type HealthHandlerInterface interface {
 	HealthCheck(c *gin.Context)
 }
 
-// Placeholder handler implementations to satisfy interfaces
-// These will be replaced by actual implementations in the handlers package
-
-// TaskHandler is a placeholder implementation of TaskHandlerInterface
-type TaskHandler struct {
-	taskService    *domain.TaskService
-	taskRepository domain.TaskRepository
-}
-
-// Implement TaskHandlerInterface methods as placeholders
-func (h *TaskHandler) CreateRootTask(c *gin.Context)     { /* TODO: implement */ }
-func (h *TaskHandler) CreateChildTask(c *gin.Context)    { /* TODO: implement */ }
-func (h *TaskHandler) GetTask(c *gin.Context)            { /* TODO: implement */ }
-func (h *TaskHandler) GetAllTasks(c *gin.Context)        { /* TODO: implement */ }
-func (h *TaskHandler) GetRootTask(c *gin.Context)        { /* TODO: implement */ }
-func (h *TaskHandler) GetTaskChildren(c *gin.Context)    { /* TODO: implement */ }
-func (h *TaskHandler) UpdateTask(c *gin.Context)         { /* TODO: implement */ }
-func (h *TaskHandler) UpdateTaskStatus(c *gin.Context)   { /* TODO: implement */ }
-func (h *TaskHandler) MoveTask(c *gin.Context)           { /* TODO: implement */ }
-func (h *TaskHandler) DeleteTask(c *gin.Context)         { /* TODO: implement */ }
-
-// HealthHandler is a placeholder implementation of HealthHandlerInterface
-type HealthHandler struct{}
-
-// Implement HealthHandlerInterface methods as placeholders
-func (h *HealthHandler) HealthCheck(c *gin.Context) { /* TODO: implement */ }
+// Handler implementations are now in the handlers package
 
 // Config holds configuration settings for the API server
 type Config struct {
@@ -227,10 +203,7 @@ func (c *Container) GetTaskHandler() TaskHandlerInterface {
 	}
 	
 	if c.taskHandler == nil {
-		c.taskHandler = &TaskHandler{
-			taskService:    c.taskService,
-			taskRepository: c.taskRepository,
-		}
+		c.taskHandler = handlers.NewTaskHandler(c.taskService, c.taskRepository)
 	}
 	return c.taskHandler
 }
@@ -243,7 +216,7 @@ func (c *Container) GetHealthHandler() HealthHandlerInterface {
 	}
 	
 	if c.healthHandler == nil {
-		c.healthHandler = &HealthHandler{}
+		c.healthHandler = handlers.NewHealthHandler()
 	}
 	return c.healthHandler
 }
@@ -255,10 +228,7 @@ func (c *Container) CreateTaskHandler() TaskHandlerInterface {
 		panic(err)
 	}
 	
-	return &TaskHandler{
-		taskService:    c.taskService,
-		taskRepository: c.taskRepository,
-	}
+	return handlers.NewTaskHandler(c.taskService, c.taskRepository)
 }
 
 // CreateHealthHandler creates a new health handler instance (non-singleton)
@@ -268,7 +238,7 @@ func (c *Container) CreateHealthHandler() HealthHandlerInterface {
 		panic(err)
 	}
 	
-	return &HealthHandler{}
+	return handlers.NewHealthHandler()
 }
 
 // Validate ensures all required dependencies are properly initialized
