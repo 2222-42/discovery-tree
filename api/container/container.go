@@ -37,7 +37,8 @@ type HealthHandlerInterface interface {
 
 // TaskHandler is a placeholder implementation of TaskHandlerInterface
 type TaskHandler struct {
-	taskService *domain.TaskService
+	taskService    *domain.TaskService
+	taskRepository domain.TaskRepository
 }
 
 // Implement TaskHandlerInterface methods as placeholders
@@ -171,7 +172,8 @@ func (c *Container) GetTaskHandler() TaskHandlerInterface {
 	
 	if c.taskHandler == nil {
 		c.taskHandler = &TaskHandler{
-			taskService: c.taskService,
+			taskService:    c.taskService,
+			taskRepository: c.taskRepository,
 		}
 	}
 	return c.taskHandler
@@ -198,7 +200,8 @@ func (c *Container) CreateTaskHandler() TaskHandlerInterface {
 	}
 	
 	return &TaskHandler{
-		taskService: c.taskService,
+		taskService:    c.taskService,
+		taskRepository: c.taskRepository,
 	}
 }
 

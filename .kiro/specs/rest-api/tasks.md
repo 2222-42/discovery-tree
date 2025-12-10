@@ -41,8 +41,8 @@
     - Test interface usage and loose coupling
     - _Requirements: 7.1, 7.2, 7.3, 7.4_
 
-- [ ] 4. Implement HTTP handlers for task operations
-  - [ ] 4.1 Create TaskHandler struct and basic CRUD operations
+- [x] 4. Implement HTTP handlers for task operations
+  - [x] 4.1 Create TaskHandler struct and basic CRUD operations
     - Define TaskHandler with injected TaskService dependency
     - Implement CreateRootTask handler with request validation and 201 response
     - Implement CreateChildTask handler with parent validation
@@ -57,7 +57,7 @@
     - **Property 5: Task Retrieval Consistency**
     - **Validates: Requirements 4.1, 4.2, 4.3, 4.4**
 
-  - [ ] 4.4 Implement task update and move operations
+  - [x] 4.4 Implement task update and move operations
     - Implement UpdateTask handler for description updates
     - Implement UpdateTaskStatus handler with status validation
     - Implement MoveTask handler with hierarchy validation and cycle prevention
@@ -67,7 +67,7 @@
     - **Property 6: Task Hierarchy Operations**
     - **Validates: Requirements 5.1, 5.2, 5.3, 5.5**
 
-  - [ ] 4.6 Implement task deletion operations
+  - [x] 4.6 Implement task deletion operations
     - Implement DeleteTask handler with cascading deletion support
     - Handle leaf task deletion with sibling position adjustment
     - Handle root task deletion with entire tree removal
