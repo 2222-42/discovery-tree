@@ -22,14 +22,14 @@
     - **Property 2: JSON Serialization Round Trip**
     - **Validates: Requirements 8.1, 8.2, 8.3, 8.5**
 
-- [ ] 3. Implement dependency injection container
-  - [ ] 3.1 Create container structure and initialization
+- [x] 3. Implement dependency injection container
+  - [x] 3.1 Create container structure and initialization
     - Define Container struct with TaskRepository, TaskService, and handler dependencies
     - Implement NewContainer function that initializes repository and services
     - Add configuration struct for API settings (port, data path, CORS, etc.)
     - _Requirements: 7.1, 7.2, 7.3, 7.4_
 
-  - [ ] 3.2 Implement container service management
+  - [x] 3.2 Implement container service management
     - Add methods to container for creating and managing service instances
     - Ensure proper interface usage for loose coupling between components
     - Implement service lifetime management for singleton services
