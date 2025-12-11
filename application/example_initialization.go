@@ -4,7 +4,8 @@ import (
 	"discovery-tree/domain"
 	"discovery-tree/infrastructure"
 	"fmt"
-	"log"
+	"log/slog"
+	"os"
 )
 
 // Example 1: Basic initialization with default file path
@@ -13,7 +14,8 @@ func ExampleBasicInitialization() {
 	// Create a FileTaskRepository with default path (./data/tasks.json)
 	repo, err := infrastructure.NewFileTaskRepository("")
 	if err != nil {
-		log.Fatalf("Failed to create repository: %v", err)
+		slog.Error("Failed to create repository", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
 
 	// Inject the repository into TaskService
@@ -31,7 +33,10 @@ func ExampleCustomFilePath() {
 	customPath := "./my-app-data/tasks.json"
 	repo, err := infrastructure.NewFileTaskRepository(customPath)
 	if err != nil {
-		log.Fatalf("Failed to create repository with custom path: %v", err)
+		slog.Error("Failed to create repository with custom path", 
+			slog.String("path", customPath),
+			slog.String("error", err.Error()))
+		os.Exit(1)
 	}
 
 	// Inject the repository into TaskService
@@ -69,35 +74,40 @@ func ExampleUsage() {
 	// Initialize the application
 	service, err := InitializeApplication("./data/tasks.json")
 	if err != nil {
-		log.Fatalf("Failed to initialize application: %v", err)
+		slog.Error("Failed to initialize application", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
 
 	// Create a root task
 	rootTask, err := service.CreateRootTask("My Project")
 	if err != nil {
-		log.Fatalf("Failed to create root task: %v", err)
+		slog.Error("Failed to create root task", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
-	fmt.Printf("Created root task: %s\n", rootTask.Description())
+	slog.Info("Created root task", slog.String("description", rootTask.Description()))
 
 	// Create child tasks
 	child1, err := service.CreateChildTask("Phase 1", rootTask.ID())
 	if err != nil {
-		log.Fatalf("Failed to create child task: %v", err)
+		slog.Error("Failed to create child task", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
-	fmt.Printf("Created child task: %s\n", child1.Description())
+	slog.Info("Created child task", slog.String("description", child1.Description()))
 
 	child2, err := service.CreateChildTask("Phase 2", rootTask.ID())
 	if err != nil {
-		log.Fatalf("Failed to create child task: %v", err)
+		slog.Error("Failed to create child task", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
-	fmt.Printf("Created child task: %s\n", child2.Description())
+	slog.Info("Created child task", slog.String("description", child2.Description()))
 
 	// Change task status
 	err = service.ChangeTaskStatus(child1.ID(), domain.StatusInProgress)
 	if err != nil {
-		log.Fatalf("Failed to change task status: %v", err)
+		slog.Error("Failed to change task status", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
-	fmt.Println("Changed task status to In Progress")
+	slog.Info("Changed task status", slog.String("status", "In Progress"))
 
 	// All changes are automatically persisted to the JSON file
 	fmt.Println("All changes persisted to disk")
@@ -109,14 +119,20 @@ func ExampleMultipleRepositories() {
 	// Create repository for user A
 	repoA, err := infrastructure.NewFileTaskRepository("./data/user_a_tasks.json")
 	if err != nil {
-		log.Fatalf("Failed to create repository A: %v", err)
+		slog.Error("Failed to create repository A", 
+			slog.String("path", "./data/user_a_tasks.json"),
+			slog.String("error", err.Error()))
+		os.Exit(1)
 	}
 	serviceA := domain.NewTaskService(repoA)
 
 	// Create repository for user B
 	repoB, err := infrastructure.NewFileTaskRepository("./data/user_b_tasks.json")
 	if err != nil {
-		log.Fatalf("Failed to create repository B: %v", err)
+		slog.Error("Failed to create repository B", 
+			slog.String("path", "./data/user_b_tasks.json"),
+			slog.String("error", err.Error()))
+		os.Exit(1)
 	}
 	serviceB := domain.NewTaskService(repoB)
 
@@ -131,7 +147,10 @@ func ExampleDependencyInjection() {
 	// In production: use FileTaskRepository
 	productionRepo, err := infrastructure.NewFileTaskRepository("./data/tasks.json")
 	if err != nil {
-		log.Fatalf("Failed to create production repository: %v", err)
+		slog.Error("Failed to create production repository", 
+			slog.String("path", "./data/tasks.json"),
+			slog.String("error", err.Error()))
+		os.Exit(1)
 	}
 	productionService := domain.NewTaskService(productionRepo)
 
