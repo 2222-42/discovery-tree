@@ -18,7 +18,7 @@ type UpdateTaskRequest struct {
 
 // UpdateStatusRequest represents the request to update a task's status
 type UpdateStatusRequest struct {
-	Status string `json:"status" binding:"required,oneof='TODO' 'In Progress' 'DONE' 'Blocked' 'Root Work Item'"`
+	Status string `json:"status" binding:"required,oneof=TODO 'In Progress' DONE Blocked 'Root Work Item'"`
 }
 
 // MoveTaskRequest represents the request to move a task to a new position or parent

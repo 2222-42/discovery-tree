@@ -47,7 +47,7 @@ go run cmd/api/main.go
 
 When `ENABLE_SWAGGER` is true (default), interactive API documentation is available at:
 - Swagger UI: `http://localhost:8080/api/v1/docs`
-- OpenAPI Schema: `http://localhost:8080/api/v1/swagger.json`
+- OpenAPI Schema: `http://localhost:8080/api/v1/docs/doc.json`
 
 ### Health Check
 

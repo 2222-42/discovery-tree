@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 )
 
 // ValidationErrorHandler middleware handles validation errors consistently
@@ -109,10 +110,8 @@ func ValidateUUID(c *gin.Context, uuidStr string, fieldName string) error {
 		return validator.ValidationErrors{}
 	}
 
-	// Simple UUID format validation (basic check for UUID pattern)
-	if len(uuidStr) != 36 || 
-		uuidStr[8] != '-' || uuidStr[13] != '-' || 
-		uuidStr[18] != '-' || uuidStr[23] != '-' {
+	// Use google/uuid package for proper UUID validation
+	if _, err := uuid.Parse(uuidStr); err != nil {
 		errorResp := models.ErrorResponse{
 			Error:   "ValidationError",
 			Code:    "INVALID_UUID",
