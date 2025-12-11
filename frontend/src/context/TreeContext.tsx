@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useCallback, useMemo } from 'react';
 
+import { treeService } from '../services/tree/index.js';
 import type { TreeContextValue } from '../types/app.js';
 import type { TreeNode, TreeState } from '../types/tree.js';
 
@@ -49,53 +50,7 @@ function treeReducer(state: TreeState, action: TreeAction): TreeState {
   }
 }
 
-/**
- * Builds a tree structure from a flat array of tasks
- */
-function buildTreeFromTasks(tasks: import('../types/task.js').Task[]): TreeNode[] {
-  const taskMap = new Map<string, import('../types/task.js').Task>();
-  const childrenMap = new Map<string, import('../types/task.js').Task[]>();
-  
-  // Build maps for efficient lookup
-  tasks.forEach(task => {
-    taskMap.set(task.id, task);
-    if (task.parentId !== null) {
-      if (!childrenMap.has(task.parentId)) {
-        childrenMap.set(task.parentId, []);
-      }
-      const children = childrenMap.get(task.parentId);
-      if (children) {
-        children.push(task);
-      }
-    }
-  });
 
-  // Sort children by position
-  childrenMap.forEach(children => {
-    children.sort((a, b) => a.position - b.position);
-  });
-
-  // Build tree nodes recursively
-  function buildNode(task: import('../types/task.js').Task, level: number): TreeNode {
-    const children = childrenMap.get(task.id) ?? [];
-    return {
-      task,
-      children: children.map(child => buildNode(child, level + 1)),
-      isExpanded: false,
-      level,
-    };
-  }
-
-  // Find root tasks (no parent or parent doesn't exist)
-  const rootTasks = tasks.filter(task => 
-    (task.parentId === null) || !taskMap.has(task.parentId)
-  );
-
-  // Sort root tasks by position
-  rootTasks.sort((a, b) => a.position - b.position);
-
-  return rootTasks.map(task => buildNode(task, 0));
-}
 
 const TreeContext = createContext<TreeContextValue | undefined>(undefined);
 
@@ -111,9 +66,9 @@ export function TreeProvider({ children }: TreeProviderProps): React.JSX.Element
   const [state, dispatch] = useReducer(treeReducer, initialState);
   const { tasks } = useTaskContext();
 
-  // Rebuild tree when tasks change
+  // Rebuild tree when tasks change using TreeService
   const rootNodes = useMemo(() => {
-    const newRootNodes = buildTreeFromTasks(tasks);
+    const newRootNodes = treeService.buildTreeFromTasks(tasks);
     // Update state if root nodes changed
     if (JSON.stringify(newRootNodes) !== JSON.stringify(state.rootNodes)) {
       dispatch({ type: 'SET_ROOT_NODES', payload: newRootNodes });
@@ -144,6 +99,22 @@ export function TreeProvider({ children }: TreeProviderProps): React.JSX.Element
     position: number
   ): Promise<void> => {
     try {
+      // Validate the move operation using TreeService
+      const validation = treeService.validateMove(rootNodes, taskId, parentId);
+      if (!validation.isValid) {
+        throw new Error(validation.error ?? 'Invalid move operation');
+      }
+
+      // Validate drag operation
+      const dragValidation = treeService.validateDragOperation(rootNodes, {
+        draggedTaskId: taskId,
+        targetParentId: parentId,
+        targetPosition: position
+      });
+      if (!dragValidation.isValid) {
+        throw new Error(dragValidation.error ?? 'Invalid drag operation');
+      }
+      
       // TODO: Implement API call when ApiClient is available
       // await apiClient.moveTask(taskId, parentId, position);
       
@@ -157,7 +128,7 @@ export function TreeProvider({ children }: TreeProviderProps): React.JSX.Element
       console.error('Failed to move task:', error);
       throw error;
     }
-  }, []);
+  }, [rootNodes]);
 
   const contextValue: TreeContextValue = {
     ...state,
