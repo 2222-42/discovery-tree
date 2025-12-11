@@ -32,7 +32,7 @@
   - Set up React Context for state management (TaskContext, TreeContext)
   - _Requirements: 1.3, 5.1_
 
-- [ ] 5. Implement API client service
+- [x] 5. Implement API client service
   - Create ApiClient class with all REST endpoint methods
   - Implement HTTP client using Axios with interceptors for error handling
   - Add request/response type definitions matching backend API
