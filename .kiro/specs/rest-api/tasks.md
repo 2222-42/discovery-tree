@@ -151,8 +151,8 @@
 - [x] 9. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 10. Integration and final testing
-  - [ ] 10.1 Create end-to-end API tests
+- [x] 10. Integration and final testing
+  - [x] 10.1 Create end-to-end API tests
     - Test complete API workflows: create root task, add children, update, move, delete
     - Test error scenarios across different endpoints
     - Test OpenAPI schema accessibility and correctness
