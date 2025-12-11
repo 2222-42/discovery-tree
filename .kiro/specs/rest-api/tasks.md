@@ -148,7 +148,7 @@
     - Document configuration options in README or comments
     - _Requirements: 7.1_
 
-- [ ] 9. Checkpoint - Ensure all tests pass
+- [x] 9. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 10. Integration and final testing
