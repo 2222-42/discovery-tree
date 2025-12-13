@@ -16,4 +16,10 @@ export default defineConfig({
       '@/utils': resolve(__dirname, './src/utils'),
     },
   },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./tests/setup.ts'],
+    css: true,
+  },
 })
