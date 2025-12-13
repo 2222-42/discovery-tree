@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 
 import { useTaskContext } from '../../context/TaskContext.js';
 import type { BaseComponentProps } from '../../types/app.js';
+import './TaskForm.css';
 
 interface TaskFormProps extends BaseComponentProps {
   /** Parent task ID for creating child tasks, null for root tasks */
