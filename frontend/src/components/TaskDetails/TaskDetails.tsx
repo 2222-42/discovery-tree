@@ -5,6 +5,8 @@ import type { BaseComponentProps } from '../../types/app.js';
 import type { Task, TaskStatus } from '../../types/task.js';
 import TaskForm from '../TaskForm/TaskForm.js';
 
+import './TaskDetails.css';
+
 interface TaskDetailsProps extends BaseComponentProps {
   /** The task to display details for */
   task: Task | null;
