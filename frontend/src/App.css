@@ -31,8 +31,14 @@
   font-weight: 500;
 }
 
-.app__create-button:hover {
+.app__create-button:hover:not(:disabled) {
   background-color: #2563eb;
+}
+
+.app__create-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #9ca3af;
 }
 
 .app__main {
@@ -58,16 +64,78 @@
   padding: 1rem;
 }
 
+/* Error and Loading States */
+.app--error {
+  background-color: #fef2f2;
+}
+
+.app__error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+  padding: 2rem;
+}
+
+.app__error-state h2 {
+  color: #991b1b;
+  margin-bottom: 0.5rem;
+}
+
+.app__error-state p {
+  color: #7f1d1d;
+  margin-bottom: 1.5rem;
+}
+
+.app__retry-button {
+  padding: 0.75rem 1.5rem;
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.app__retry-button:hover {
+  background-color: #dc2626;
+}
+
+.app__error-banner {
+  background-color: #fecaca;
+  color: #991b1b;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  margin-left: 1rem;
+}
+
 /* TreeView Styles */
 .tree-view {
   width: 100%;
 }
 
-.tree-view--empty {
+.tree-view--empty,
+.tree-view--loading,
+.tree-view--error {
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 200px;
+}
+
+.tree-view--loading {
+  color: #6b7280;
+}
+
+.tree-view--error {
+  color: #991b1b;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.375rem;
+  padding: 1rem;
 }
 
 .tree-view__empty-state {

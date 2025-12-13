@@ -64,7 +64,7 @@ interface TreeProviderProps {
  */
 export function TreeProvider({ children }: TreeProviderProps): React.JSX.Element {
   const [state, dispatch] = useReducer(treeReducer, initialState);
-  const { tasks } = useTaskContext();
+  const { tasks, refreshTasks } = useTaskContext();
 
   // Rebuild tree when tasks change using TreeService
   const rootNodes = useMemo(() => {
@@ -115,20 +115,19 @@ export function TreeProvider({ children }: TreeProviderProps): React.JSX.Element
         throw new Error(dragValidation.error ?? 'Invalid drag operation');
       }
       
-      // TODO: Implement API call when ApiClient is available
-      // await apiClient.moveTask(taskId, parentId, position);
+      // Import API client dynamically to avoid circular dependency
+      const { apiClient } = await import('../services/api/apiClient.js');
+      await apiClient.moveTask(taskId, parentId ?? undefined, position);
       
-      // For now, this is a placeholder - simulate async operation
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Refresh tasks to get updated tree structure
+      await refreshTasks();
       
-      // eslint-disable-next-line no-console
-      console.log(`Moving task ${taskId} to parent ${String(parentId)} at position ${String(position)}`);
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Failed to move task:', error);
       throw error;
     }
-  }, [rootNodes]);
+  }, [rootNodes, refreshTasks]);
 
   const contextValue: TreeContextValue = {
     ...state,

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary.js';
 import TaskDetails from './components/TaskDetails/TaskDetails.js';
@@ -15,7 +15,12 @@ import './App.css';
  */
 function AppLayout(): React.JSX.Element {
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const { selectedTask, selectTask } = useTaskContext();
+  const { selectedTask, selectTask, loading, error, refreshTasks } = useTaskContext();
+
+  // Load initial data when the app starts
+  useEffect(() => {
+    void refreshTasks();
+  }, [refreshTasks]);
 
   const handleNodeSelect = (nodeId: string | null): void => {
     selectTask(nodeId);
@@ -27,6 +32,8 @@ function AppLayout(): React.JSX.Element {
 
   const handleFormSubmit = (): void => {
     setShowCreateForm(false);
+    // Refresh tasks after creation to ensure tree is up to date
+    void refreshTasks();
   };
 
   const handleFormCancel = (): void => {
@@ -35,17 +42,43 @@ function AppLayout(): React.JSX.Element {
 
   const handleTaskUpdate = (): void => {
     // Task updates are handled through the context
-    // This callback can be used for additional UI updates if needed
+    // Refresh tasks to ensure consistency
+    void refreshTasks();
   };
 
   const handleTaskDelete = (): void => {
     // Task deletion is handled through the context
-    // This callback can be used for additional UI updates if needed
+    // Refresh tasks to ensure tree is updated
+    void refreshTasks();
   };
 
   const handleCloseDetails = (): void => {
     selectTask(null);
   };
+
+  // Show global error state if there's an error and no tasks loaded
+  if (error !== null && error !== '' && !loading) {
+    return (
+      <div className="app app--error">
+        <header className="app__header">
+          <h1 className="app__title">Discovery Tree</h1>
+        </header>
+        <main className="app__main">
+          <div className="app__error-state">
+            <h2>Unable to load tasks</h2>
+            <p>{error}</p>
+            <button 
+              className="app__retry-button"
+              onClick={() => { void refreshTasks(); }}
+              data-testid="retry-button"
+            >
+              Retry
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="app">
@@ -54,10 +87,16 @@ function AppLayout(): React.JSX.Element {
         <button 
           className="app__create-button"
           onClick={handleCreateTask}
+          disabled={loading}
           data-testid="create-task-button"
         >
-          Create Root Task
+          {loading ? 'Loading...' : 'Create Root Task'}
         </button>
+        {(error !== null && error !== '') && (
+          <div className="app__error-banner" data-testid="error-banner">
+            {error}
+          </div>
+        )}
       </header>
 
       <main className="app__main">
@@ -65,6 +104,8 @@ function AppLayout(): React.JSX.Element {
           <div className="app__tree-panel">
             <TreeView 
               onNodeSelect={handleNodeSelect}
+              loading={loading}
+              error={error}
               data-testid="main-tree-view"
             />
           </div>
