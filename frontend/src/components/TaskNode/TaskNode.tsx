@@ -27,7 +27,7 @@ export function TaskNode({
   className = '',
   'data-testid': testId = 'task-node'
 }: TaskNodeProps): React.JSX.Element {
-  const { toggleNode, selectNode } = useTreeContext();
+  const { toggleNode, selectNode, expandedNodes, selectedNodeId } = useTreeContext();
   const { task, children, level } = node;
 
   const hasChildren = children.length > 0;
@@ -124,8 +124,8 @@ export function TaskNode({
             <TaskNode
               key={childNode.task.id}
               node={childNode}
-              isSelected={false} // Only one node can be selected at a time
-              isExpanded={false} // Child expansion is managed by TreeContext
+              isSelected={selectedNodeId === childNode.task.id}
+              isExpanded={expandedNodes.has(childNode.task.id)}
               {...(onSelect && { onSelect })}
               data-testid={`task-node-${childNode.task.id}`}
             />
