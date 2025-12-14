@@ -13,7 +13,9 @@
   color: #333;
   background-color: #fff;
   border: 1px solid #e1e5e9;
-  border-radius: 4px;
+  border-radius: 8px;
+  position: relative;
+  scroll-behavior: smooth;
 }
 
 .tree-view:focus {
@@ -21,9 +23,20 @@
   outline-offset: -2px;
 }
 
+.tree-view:focus-within {
+  border-color: #0066cc;
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+}
+
 /* Tree content container */
 .tree-view__content {
   padding: 8px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Empty state */
@@ -51,35 +64,42 @@
   align-items: center;
   justify-content: center;
   min-height: 200px;
+  position: relative;
 }
 
 .tree-view__loading-state {
   text-align: center;
   color: #666;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
 }
 
 .tree-view__loading-state p {
   margin: 0;
-  padding: 16px;
+  padding: 0;
+  animation: pulse 2s ease-in-out infinite;
 }
 
-.tree-view__loading-state::before {
-  content: '';
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  margin-right: 8px;
-  border: 2px solid #e1e5e9;
+.tree-view__loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #e1e5e9;
   border-top-color: #0066cc;
   border-radius: 50%;
   animation: tree-view-spin 1s linear infinite;
-  vertical-align: middle;
 }
 
 @keyframes tree-view-spin {
   to {
     transform: rotate(360deg);
   }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 /* Error state */
@@ -109,27 +129,42 @@
   position: relative;
   margin: 0;
   padding: 0;
+  animation: slideInFromLeft 0.2s ease-out;
+}
+
+@keyframes slideInFromLeft {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 .task-node__content {
   display: flex;
   align-items: center;
-  padding: 4px 8px;
+  padding: 6px 8px;
   margin: 1px 0;
-  border-radius: 3px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: background-color 0.15s ease;
-  min-height: 28px;
+  transition: all 0.2s ease;
+  min-height: 32px;
+  border: 1px solid transparent;
 }
 
 .task-node__content:hover {
   background-color: #f6f8fa;
+  border-color: #e1e5e9;
+  transform: translateX(2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .task-node__content:focus {
   outline: 2px solid #0066cc;
   outline-offset: -2px;
   background-color: #f1f8ff;
+}
+
+.task-node__content:active {
+  transform: translateX(1px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 /* Selected state */
@@ -271,14 +306,104 @@
   padding-left: calc(8px + var(--level, 0) * 20px);
 }
 
+/* Responsive Design */
+@media (max-width: 768px) {
+  .tree-view {
+    font-size: 16px; /* Larger touch targets */
+    border-radius: 4px;
+  }
+  
+  .task-node__content {
+    padding: 8px 12px;
+    min-height: 44px; /* Better touch targets */
+  }
+  
+  .task-node__toggle {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+  }
+  
+  .task-node__status {
+    width: 20px;
+    height: 20px;
+    font-size: 14px;
+  }
+  
+  .task-node__description {
+    font-size: 16px;
+  }
+  
+  /* Reduce indentation on mobile */
+  .task-node--level-1 .task-node__content {
+    padding-left: 20px;
+  }
+  
+  .task-node--level-2 .task-node__content {
+    padding-left: 32px;
+  }
+  
+  .task-node--level-3 .task-node__content {
+    padding-left: 44px;
+  }
+  
+  .task-node--level-4 .task-node__content {
+    padding-left: 56px;
+  }
+  
+  .task-node--level-5 .task-node__content {
+    padding-left: 68px;
+  }
+}
+
+@media (max-width: 480px) {
+  .tree-view {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+  
+  .task-node__content {
+    padding: 10px 8px;
+  }
+  
+  .task-node__id {
+    display: none; /* Hide IDs on very small screens */
+  }
+  
+  /* Further reduce indentation */
+  .task-node--level-1 .task-node__content {
+    padding-left: 16px;
+  }
+  
+  .task-node--level-2 .task-node__content {
+    padding-left: 24px;
+  }
+  
+  .task-node--level-3 .task-node__content {
+    padding-left: 32px;
+  }
+  
+  .task-node--level-4 .task-node__content {
+    padding-left: 40px;
+  }
+  
+  .task-node--level-5 .task-node__content {
+    padding-left: 48px;
+  }
+}
+
 /* Accessibility improvements */
 @media (prefers-reduced-motion: reduce) {
+  .task-node,
   .task-node__content,
-  .task-node__toggle {
+  .task-node__toggle,
+  .tree-view__content {
+    animation: none;
     transition: none;
   }
   
-  .tree-view__loading-state::before {
+  .tree-view__loading-spinner {
     animation: none;
   }
 }
@@ -287,25 +412,60 @@
 @media (prefers-contrast: high) {
   .tree-view {
     border-color: #000;
+    border-width: 2px;
+  }
+  
+  .task-node__content {
+    border-width: 2px;
   }
   
   .task-node__content:hover {
     background-color: #e6e6e6;
+    border-color: #000;
   }
   
   .task-node--selected .task-node__content {
     background-color: #000;
     color: #fff;
+    border-color: #fff;
   }
 }
 
 /* Focus visible for better keyboard navigation */
 .task-node__content:focus-visible {
-  outline: 2px solid #0066cc;
-  outline-offset: -2px;
+  outline: 3px solid #0066cc;
+  outline-offset: 2px;
 }
 
 .task-node__toggle:focus-visible {
   outline: 2px solid #0066cc;
   outline-offset: 1px;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .tree-view {
+    background-color: #1a1a1a;
+    border-color: #404040;
+    color: #e0e0e0;
+  }
+  
+  .task-node__content:hover {
+    background-color: #2a2a2a;
+  }
+  
+  .task-node--selected .task-node__content {
+    background-color: #0066cc;
+    color: #fff;
+  }
+  
+  .tree-view__loading-state {
+    color: #a0a0a0;
+  }
+  
+  .tree-view__error-state {
+    background-color: #2d1b1b;
+    border-color: #8b4444;
+    color: #ff6b6b;
+  }
 }
