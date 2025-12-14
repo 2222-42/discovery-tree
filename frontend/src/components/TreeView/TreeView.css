@@ -1,0 +1,471 @@
+/**
+ * TreeView component styles
+ * Provides hierarchical tree rendering with expand/collapse functionality
+ */
+
+.tree-view {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #333;
+  background-color: #fff;
+  border: 1px solid #e1e5e9;
+  border-radius: 8px;
+  position: relative;
+  scroll-behavior: smooth;
+}
+
+.tree-view:focus {
+  outline: 2px solid #0066cc;
+  outline-offset: -2px;
+}
+
+.tree-view:focus-within {
+  border-color: #0066cc;
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+}
+
+/* Tree content container */
+.tree-view__content {
+  padding: 8px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Empty state */
+.tree-view--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.tree-view__empty-state {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+}
+
+.tree-view__empty-state p {
+  margin: 0;
+  padding: 16px;
+}
+
+/* Loading state */
+.tree-view--loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  position: relative;
+}
+
+.tree-view__loading-state {
+  text-align: center;
+  color: #666;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.tree-view__loading-state p {
+  margin: 0;
+  padding: 0;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.tree-view__loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #e1e5e9;
+  border-top-color: #0066cc;
+  border-radius: 50%;
+  animation: tree-view-spin 1s linear infinite;
+}
+
+@keyframes tree-view-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Error state */
+.tree-view--error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.tree-view__error-state {
+  text-align: center;
+  color: #d73a49;
+  background-color: #ffeef0;
+  border: 1px solid #f97583;
+  border-radius: 4px;
+  padding: 16px;
+  margin: 16px;
+}
+
+.tree-view__error-state p {
+  margin: 0;
+}
+
+/* Task node styles */
+.task-node {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  animation: slideInFromLeft 0.2s ease-out;
+}
+
+@keyframes slideInFromLeft {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.task-node__content {
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  margin: 1px 0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 32px;
+  border: 1px solid transparent;
+}
+
+.task-node__content:hover {
+  background-color: #f6f8fa;
+  border-color: #e1e5e9;
+  transform: translateX(2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.task-node__content:focus {
+  outline: 2px solid #0066cc;
+  outline-offset: -2px;
+  background-color: #f1f8ff;
+}
+
+.task-node__content:active {
+  transform: translateX(1px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Selected state */
+.task-node--selected .task-node__content {
+  background-color: #0366d6;
+  color: white;
+}
+
+.task-node--selected .task-node__content:hover {
+  background-color: #0256cc;
+}
+
+/* Toggle button */
+.task-node__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-right: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 10px;
+  color: #586069;
+  transition: color 0.15s ease;
+}
+
+.task-node__toggle:hover {
+  color: #0366d6;
+}
+
+.task-node__toggle:focus {
+  outline: 1px solid #0066cc;
+  outline-offset: 1px;
+}
+
+.task-node--selected .task-node__toggle {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.task-node--selected .task-node__toggle:hover {
+  color: white;
+}
+
+/* Status icon */
+.task-node__status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.task-node--status-todo .task-node__status {
+  color: #6a737d;
+}
+
+.task-node--status-in_progress .task-node__status {
+  color: #f66a0a;
+}
+
+.task-node--status-done .task-node__status {
+  color: #28a745;
+}
+
+.task-node--status-root_work_item .task-node__status {
+  color: #6f42c1;
+}
+
+.task-node--selected .task-node__status {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Task description */
+.task-node__description {
+  flex: 1;
+  margin-right: 8px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.task-node--status-done .task-node__description {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+/* Task ID */
+.task-node__id {
+  font-size: 11px;
+  color: #6a737d;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  opacity: 0.8;
+}
+
+.task-node--selected .task-node__id {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Children container */
+.task-node__children {
+  margin-left: 0;
+  padding-left: 0;
+}
+
+/* Level-based indentation */
+.task-node--level-0 .task-node__content {
+  padding-left: 8px;
+}
+
+.task-node--level-1 .task-node__content {
+  padding-left: 28px;
+}
+
+.task-node--level-2 .task-node__content {
+  padding-left: 48px;
+}
+
+.task-node--level-3 .task-node__content {
+  padding-left: 68px;
+}
+
+.task-node--level-4 .task-node__content {
+  padding-left: 88px;
+}
+
+.task-node--level-5 .task-node__content {
+  padding-left: 108px;
+}
+
+/* For deeper levels, continue the pattern */
+.task-node[class*="task-node--level-"] .task-node__content {
+  padding-left: calc(8px + var(--level, 0) * 20px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .tree-view {
+    font-size: 16px; /* Larger touch targets */
+    border-radius: 4px;
+  }
+  
+  .task-node__content {
+    padding: 8px 12px;
+    min-height: 44px; /* Better touch targets */
+  }
+  
+  .task-node__toggle {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+  }
+  
+  .task-node__status {
+    width: 20px;
+    height: 20px;
+    font-size: 14px;
+  }
+  
+  .task-node__description {
+    font-size: 16px;
+  }
+  
+  /* Reduce indentation on mobile */
+  .task-node--level-1 .task-node__content {
+    padding-left: 20px;
+  }
+  
+  .task-node--level-2 .task-node__content {
+    padding-left: 32px;
+  }
+  
+  .task-node--level-3 .task-node__content {
+    padding-left: 44px;
+  }
+  
+  .task-node--level-4 .task-node__content {
+    padding-left: 56px;
+  }
+  
+  .task-node--level-5 .task-node__content {
+    padding-left: 68px;
+  }
+}
+
+@media (max-width: 480px) {
+  .tree-view {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+  
+  .task-node__content {
+    padding: 10px 8px;
+  }
+  
+  .task-node__id {
+    display: none; /* Hide IDs on very small screens */
+  }
+  
+  /* Further reduce indentation */
+  .task-node--level-1 .task-node__content {
+    padding-left: 16px;
+  }
+  
+  .task-node--level-2 .task-node__content {
+    padding-left: 24px;
+  }
+  
+  .task-node--level-3 .task-node__content {
+    padding-left: 32px;
+  }
+  
+  .task-node--level-4 .task-node__content {
+    padding-left: 40px;
+  }
+  
+  .task-node--level-5 .task-node__content {
+    padding-left: 48px;
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .task-node,
+  .task-node__content,
+  .task-node__toggle,
+  .tree-view__content {
+    animation: none;
+    transition: none;
+  }
+  
+  .tree-view__loading-spinner {
+    animation: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .tree-view {
+    border-color: #000;
+    border-width: 2px;
+  }
+  
+  .task-node__content {
+    border-width: 2px;
+  }
+  
+  .task-node__content:hover {
+    background-color: #e6e6e6;
+    border-color: #000;
+  }
+  
+  .task-node--selected .task-node__content {
+    background-color: #000;
+    color: #fff;
+    border-color: #fff;
+  }
+}
+
+/* Focus visible for better keyboard navigation */
+.task-node__content:focus-visible {
+  outline: 3px solid #0066cc;
+  outline-offset: 2px;
+}
+
+.task-node__toggle:focus-visible {
+  outline: 2px solid #0066cc;
+  outline-offset: 1px;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .tree-view {
+    background-color: #1a1a1a;
+    border-color: #404040;
+    color: #e0e0e0;
+  }
+  
+  .task-node__content:hover {
+    background-color: #2a2a2a;
+  }
+  
+  .task-node--selected .task-node__content {
+    background-color: #0066cc;
+    color: #fff;
+  }
+  
+  .tree-view__loading-state {
+    color: #a0a0a0;
+  }
+  
+  .tree-view__error-state {
+    background-color: #2d1b1b;
+    border-color: #8b4444;
+    color: #ff6b6b;
+  }
+}

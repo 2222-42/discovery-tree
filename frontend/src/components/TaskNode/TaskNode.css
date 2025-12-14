@@ -1,0 +1,431 @@
+/* TaskNode Component Styles */
+
+.task-node {
+  position: relative;
+  user-select: none;
+  animation: slideInFromLeft 0.2s ease-out;
+}
+
+@keyframes slideInFromLeft {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.task-node__content {
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 36px;
+  gap: 8px;
+  border: 1px solid transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+.task-node__content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.task-node__content:hover {
+  background-color: #f3f4f6;
+  border-color: #e5e7eb;
+  transform: translateX(2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.task-node__content:hover::before {
+  left: 100%;
+}
+
+.task-node__content:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.task-node__content:active {
+  transform: translateX(1px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.task-node--selected .task-node__content {
+  background-color: #dbeafe;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.task-node--editing .task-node__content {
+  background-color: #fefce8;
+  border-color: #facc15;
+  box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.1);
+}
+
+/* Toggle button */
+.task-node__toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  font-size: 12px;
+  color: #6b7280;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.task-node__toggle:hover {
+  background-color: #e5e7eb;
+  color: #374151;
+  transform: scale(1.1);
+}
+
+.task-node__toggle:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 1px;
+}
+
+.task-node__toggle:active {
+  transform: scale(0.95);
+}
+
+.task-node__toggle--expanded {
+  transform: rotate(90deg);
+}
+
+.task-node__toggle--expanded:hover {
+  transform: rotate(90deg) scale(1.1);
+}
+
+/* Status icon */
+.task-node__status {
+  font-size: 14px;
+  font-weight: bold;
+  min-width: 16px;
+  text-align: center;
+}
+
+/* Description */
+.task-node__description {
+  flex: 1;
+  font-size: 14px;
+  color: #374151;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Task ID */
+.task-node__id {
+  font-size: 11px;
+  color: #9ca3af;
+  font-family: monospace;
+  margin-left: auto;
+}
+
+/* Edit input */
+.task-node__edit-input {
+  flex: 1;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 14px;
+  background-color: white;
+  outline: none;
+}
+
+.task-node__edit-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 1px #3b82f6;
+}
+
+/* Children container */
+.task-node__children {
+  margin-left: 0;
+}
+
+/* Context Menu */
+.task-node__context-menu {
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  padding: 4px 0;
+  min-width: 160px;
+  font-size: 14px;
+}
+
+.task-node__context-menu-item {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  color: #374151;
+  transition: background-color 0.15s ease;
+}
+
+.task-node__context-menu-item:hover {
+  background-color: #f3f4f6;
+}
+
+.task-node__context-menu-item--danger {
+  color: #dc2626;
+}
+
+.task-node__context-menu-item--danger:hover {
+  background-color: #fef2f2;
+}
+
+.task-node__context-menu-separator {
+  height: 1px;
+  background-color: #e5e7eb;
+  margin: 4px 0;
+}
+
+.task-node__context-menu-submenu {
+  padding: 4px 0;
+}
+
+.task-node__context-menu-label {
+  display: block;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Status-specific styling */
+.task-node--status-todo .task-node__description {
+  color: #6b7280;
+}
+
+.task-node--status-in_progress .task-node__description {
+  color: #d97706;
+  font-weight: 500;
+}
+
+.task-node--status-done .task-node__description {
+  color: #059669;
+  text-decoration: line-through;
+}
+
+.task-node--status-root_work_item .task-node__description {
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+/* Level-based indentation is handled via inline styles */
+/* But we can add visual indicators for deep nesting */
+.task-node--level-3,
+.task-node--level-4,
+.task-node--level-5 {
+  border-left: 1px solid #e5e7eb;
+}
+
+/* Loading state for task operations */
+.task-node--loading .task-node__content {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.task-node--loading .task-node__content::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  width: 16px;
+  height: 16px;
+  margin-top: -8px;
+  border: 2px solid #e5e7eb;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .task-node__content {
+    padding: 8px 12px;
+    min-height: 44px; /* Better touch targets */
+    gap: 12px;
+  }
+  
+  .task-node__toggle {
+    width: 24px;
+    height: 24px;
+    padding: 6px;
+  }
+  
+  .task-node__status {
+    font-size: 16px;
+    min-width: 20px;
+  }
+  
+  .task-node__description {
+    font-size: 16px;
+  }
+  
+  .task-node__id {
+    font-size: 12px;
+  }
+  
+  .task-node__edit-input {
+    padding: 6px 12px;
+    font-size: 16px;
+  }
+  
+  .task-node__context-menu {
+    min-width: 180px;
+    font-size: 16px;
+  }
+  
+  .task-node__context-menu-item {
+    padding: 12px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .task-node__content {
+    padding: 10px 8px;
+    gap: 8px;
+  }
+  
+  .task-node__id {
+    display: none; /* Hide IDs on very small screens */
+  }
+  
+  .task-node__context-menu {
+    min-width: 160px;
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .task-node,
+  .task-node__content,
+  .task-node__toggle,
+  .task-node__context-menu-item {
+    animation: none;
+    transition: none;
+  }
+  
+  .task-node__content::before {
+    display: none;
+  }
+  
+  .task-node--loading .task-node__content::after {
+    animation: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .task-node__content {
+    border-width: 2px;
+  }
+  
+  .task-node--selected .task-node__content {
+    border-color: currentColor;
+    background-color: HighlightText;
+    color: Highlight;
+  }
+  
+  .task-node__context-menu {
+    border-width: 2px;
+    box-shadow: none;
+  }
+  
+  .task-node__toggle:hover {
+    background-color: ButtonFace;
+    border: 1px solid ButtonText;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .task-node__content {
+    background-color: transparent;
+  }
+  
+  .task-node__content:hover {
+    background-color: #374151;
+    border-color: #4b5563;
+  }
+  
+  .task-node--selected .task-node__content {
+    background-color: #1e40af;
+    border-color: #3b82f6;
+  }
+  
+  .task-node--editing .task-node__content {
+    background-color: #451a03;
+    border-color: #d97706;
+  }
+  
+  .task-node__toggle {
+    color: #9ca3af;
+  }
+  
+  .task-node__toggle:hover {
+    background-color: #4b5563;
+    color: #f3f4f6;
+  }
+  
+  .task-node__description {
+    color: #f3f4f6;
+  }
+  
+  .task-node__id {
+    color: #6b7280;
+  }
+  
+  .task-node__edit-input {
+    background-color: #374151;
+    border-color: #4b5563;
+    color: #f3f4f6;
+  }
+  
+  .task-node__context-menu {
+    background-color: #374151;
+    border-color: #4b5563;
+  }
+  
+  .task-node__context-menu-item {
+    color: #f3f4f6;
+  }
+  
+  .task-node__context-menu-item:hover {
+    background-color: #4b5563;
+  }
+  
+  .task-node__context-menu-item--danger {
+    color: #f87171;
+  }
+  
+  .task-node__context-menu-item--danger:hover {
+    background-color: #7f1d1d;
+  }
+}
