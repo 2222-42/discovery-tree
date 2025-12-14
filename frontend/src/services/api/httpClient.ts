@@ -22,8 +22,8 @@ interface HttpClientConfig {
  * Default configuration for the HTTP client
  */
 const DEFAULT_CONFIG: HttpClientConfig = {
-  baseURL: 'http://localhost:8080/api/v1',
-  timeout: 10000,
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1',
+  timeout: Number(import.meta.env.VITE_API_TIMEOUT) || 10000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -54,8 +54,8 @@ export class AxiosHttpClient implements HttpClient {
     // Request interceptor for logging and adding auth headers if needed
     this.axiosInstance.interceptors.request.use(
       (config) => {
-        // Only log in development mode
-        if (import.meta.env.DEV) {
+        // Only log when debug logging is enabled
+        if (import.meta.env.VITE_ENABLE_DEBUG_LOGGING === 'true') {
           // eslint-disable-next-line no-console
           console.debug('HTTP Request:', {
             method: config.method?.toUpperCase(),
@@ -65,7 +65,7 @@ export class AxiosHttpClient implements HttpClient {
         return config;
       },
       (error: unknown) => {
-        if (import.meta.env.DEV) {
+        if (import.meta.env.VITE_ENABLE_DEBUG_LOGGING === 'true') {
           // eslint-disable-next-line no-console
           console.error('HTTP Request Error:', error);
         }
@@ -77,7 +77,7 @@ export class AxiosHttpClient implements HttpClient {
     // Response interceptor for error handling and logging
     this.axiosInstance.interceptors.response.use(
       (response: AxiosResponse) => {
-        if (import.meta.env.DEV) {
+        if (import.meta.env.VITE_ENABLE_DEBUG_LOGGING === 'true') {
           // eslint-disable-next-line no-console
           console.debug('HTTP Response:', {
             status: response.status,
@@ -88,7 +88,7 @@ export class AxiosHttpClient implements HttpClient {
       },
       (error: unknown) => {
         const apiError = this.transformError(error);
-        if (import.meta.env.DEV) {
+        if (import.meta.env.VITE_ENABLE_DEBUG_LOGGING === 'true') {
           // eslint-disable-next-line no-console
           console.error('HTTP Response Error:', apiError);
         }

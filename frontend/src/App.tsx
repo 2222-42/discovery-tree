@@ -4,6 +4,7 @@ import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary.js';
 import TaskDetails from './components/TaskDetails/TaskDetails.js';
 import TaskForm from './components/TaskForm/TaskForm.js';
 import TreeView from './components/TreeView/TreeView.js';
+import { getDevelopmentConfig, devLog, hmrUtils } from './config/index.js';
 import { TaskProvider, TreeProvider } from './context/index.js';
 import { useTaskContext } from './context/TaskContext.js';
 
@@ -139,6 +140,34 @@ function AppLayout(): React.JSX.Element {
  * Sets up the application structure with proper error handling and state management
  */
 function App(): React.JSX.Element {
+  // Initialize development configuration
+  useEffect(() => {
+    const config = getDevelopmentConfig();
+    devLog.info('Application starting with configuration:', config);
+    
+    // Log environment information in development
+    devLog.debug('Environment variables:', {
+      NODE_ENV: import.meta.env.MODE,
+      DEV: import.meta.env.DEV,
+      PROD: import.meta.env.PROD,
+    });
+  }, []);
+
+  // Set up HMR for the App component
+  useEffect(() => {
+    if (hmrUtils.isAvailable()) {
+      devLog.debug('Hot Module Replacement is available');
+      
+      hmrUtils.accept(() => {
+        devLog.info('App component hot reloaded');
+      });
+      
+      hmrUtils.dispose(() => {
+        devLog.debug('App component disposed for HMR');
+      });
+    }
+  }, []);
+
   return (
     <ErrorBoundary>
       <TaskProvider>

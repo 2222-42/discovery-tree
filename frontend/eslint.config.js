@@ -10,7 +10,7 @@ import tseslint from 'typescript-eslint'
 export default [
   // Global ignores
   {
-    ignores: ['dist/**', 'node_modules/**', 'coverage/**', '*.config.js', '*.config.ts']
+    ignores: ['dist/**', 'node_modules/**', 'coverage/**', '*.config.js', '*.config.ts', 'scripts/**']
   },
   
   // Base configuration for all files
@@ -152,6 +152,24 @@ export default [
       'jsx-a11y/no-noninteractive-element-interactions': 'error',
       'jsx-a11y/role-has-required-aria-props': 'error',
       'jsx-a11y/role-supports-aria-props': 'error',
+    },
+  },
+  
+  // JavaScript files configuration (scripts, etc.)
+  {
+    files: ['**/*.js', '**/*.mjs'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+      globals: {
+        ...globals.node,
+        ...globals.es2022,
+      },
+    },
+    rules: {
+      'no-console': 'off', // Allow console in scripts
+      'prefer-const': 'error',
+      'no-var': 'error',
     },
   },
   
