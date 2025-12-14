@@ -16,7 +16,10 @@ type TreeAction =
   | { type: 'START_INLINE_CREATION'; payload: string }
   | { type: 'CANCEL_INLINE_CREATION' }
   | { type: 'UPDATE_INLINE_DESCRIPTION'; payload: string }
-  | { type: 'SET_INLINE_ERROR'; payload: string | null };
+  | { type: 'SET_INLINE_ERROR'; payload: string | null }
+  | { type: 'START_DRAG'; payload: string }
+  | { type: 'END_DRAG' }
+  | { type: 'SET_DRAG_OVER'; payload: { taskId: string | null; position: 'before' | 'after' | 'child' | null } };
 
 const initialState: TreeState = {
   expandedNodes: new Set<string>(),
@@ -27,6 +30,12 @@ const initialState: TreeState = {
     isCreating: false,
     description: '',
     error: null,
+  },
+  dragDropState: {
+    draggedTaskId: null,
+    dragOverTaskId: null,
+    dropPosition: null,
+    isDragging: false,
   },
 };
 
@@ -89,6 +98,35 @@ function treeReducer(state: TreeState, action: TreeAction): TreeState {
         inlineCreationState: {
           ...state.inlineCreationState,
           error: action.payload,
+        },
+      };
+    case 'START_DRAG':
+      return {
+        ...state,
+        dragDropState: {
+          draggedTaskId: action.payload,
+          dragOverTaskId: null,
+          dropPosition: null,
+          isDragging: true,
+        },
+      };
+    case 'END_DRAG':
+      return {
+        ...state,
+        dragDropState: {
+          draggedTaskId: null,
+          dragOverTaskId: null,
+          dropPosition: null,
+          isDragging: false,
+        },
+      };
+    case 'SET_DRAG_OVER':
+      return {
+        ...state,
+        dragDropState: {
+          ...state.dragDropState,
+          dragOverTaskId: action.payload.taskId,
+          dropPosition: action.payload.position,
         },
       };
     default:
@@ -217,6 +255,70 @@ export function TreeProvider({ children }: TreeProviderProps): React.JSX.Element
     }
   }, [state.inlineCreationState, refreshTasks]);
 
+  // Drag and drop handlers
+  const startDrag = useCallback((taskId: string): void => {
+    dispatch({ type: 'START_DRAG', payload: taskId });
+  }, []);
+
+  const endDrag = useCallback((): void => {
+    dispatch({ type: 'END_DRAG' });
+  }, []);
+
+  const setDragOver = useCallback((taskId: string | null, position: 'before' | 'after' | 'child' | null): void => {
+    dispatch({ type: 'SET_DRAG_OVER', payload: { taskId, position } });
+  }, []);
+
+  const handleDrop = useCallback(async (targetTaskId: string, position: 'before' | 'after' | 'child'): Promise<void> => {
+    const { draggedTaskId } = state.dragDropState;
+    
+    if (draggedTaskId === null || draggedTaskId === targetTaskId) {
+      endDrag();
+      return;
+    }
+
+    try {
+      // Find the target task to determine parent and position
+      const allTasks = tasks;
+      const targetTask = allTasks.find(t => t.id === targetTaskId);
+      
+      if (targetTask === undefined) {
+        throw new Error('Target task not found');
+      }
+
+      let newParentId: string | null;
+      let newPosition: number;
+
+      if (position === 'child') {
+        // Drop as child of target task
+        newParentId = targetTaskId;
+        // Find the number of existing children to append at the end
+        const childrenCount = allTasks.filter(t => t.parentId === targetTaskId).length;
+        newPosition = childrenCount;
+      } else {
+        // Drop as sibling (before or after target task)
+        newParentId = targetTask.parentId;
+        const siblings = allTasks
+          .filter(t => t.parentId === newParentId)
+          .sort((a, b) => a.position - b.position);
+        
+        const targetIndex = siblings.findIndex(t => t.id === targetTaskId);
+        if (targetIndex === -1) {
+          throw new Error('Target task not found in siblings');
+        }
+        
+        newPosition = position === 'before' ? targetTask.position : targetTask.position + 1;
+      }
+
+      await moveTask(draggedTaskId, newParentId, newPosition);
+      
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to drop task:', error);
+    } finally {
+      endDrag();
+    }
+  }, [state.dragDropState, tasks, moveTask, endDrag]);
+
   const contextValue: TreeContextValue = {
     ...state,
     rootNodes,
@@ -229,6 +331,10 @@ export function TreeProvider({ children }: TreeProviderProps): React.JSX.Element
     cancelInlineCreation,
     updateInlineDescription,
     completeInlineCreation,
+    startDrag,
+    endDrag,
+    setDragOver,
+    handleDrop,
   };
 
   return (

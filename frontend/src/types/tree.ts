@@ -57,6 +57,8 @@ export interface TreeState {
   rootNodes: TreeNode[];
   /** Inline task creation state */
   inlineCreationState: InlineCreationState;
+  /** Drag and drop state */
+  dragDropState: DragDropState;
 }
 
 /**
@@ -83,4 +85,18 @@ export interface InlineCreationState {
   description: string;
   /** Error message for inline creation, if any */
   error: string | null;
+}
+
+/**
+ * Drag and drop state for task reordering
+ */
+export interface DragDropState {
+  /** ID of the task currently being dragged (null if none) */
+  draggedTaskId: string | null;
+  /** ID of the task being dragged over (null if none) */
+  dragOverTaskId: string | null;
+  /** Position where the dragged task would be dropped ('before' | 'after' | 'child') */
+  dropPosition: 'before' | 'after' | 'child' | null;
+  /** Whether drag operation is currently active */
+  isDragging: boolean;
 }
