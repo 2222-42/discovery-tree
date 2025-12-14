@@ -104,7 +104,7 @@
   - **Property 7: Error handling consistency**
   - **Validates: Requirements 4.5**
 
-- [ ] 11.3 Implement InlineTaskForm component for child task creation
+- [x] 11.3 Implement InlineTaskForm component for child task creation
   - Create lightweight inline form component for creating child tasks
   - Add proper visual hierarchy with indentation and parent-child indicators
   - Implement keyboard navigation (Enter to save, Escape to cancel)
@@ -119,14 +119,14 @@
   - **Property 9: Parent-child visual relationship consistency**
   - **Validates: Requirements 5.3**
 
-- [ ] 11.6 Update TreeContext to manage inline creation state
+- [x] 11.6 Update TreeContext to manage inline creation state
   - Add InlineCreationState to TreeContext
   - Implement state management for active inline forms
   - Add methods for starting, canceling, and completing inline creation
   - Ensure only one inline form can be active at a time
   - _Requirements: 5.1, 5.4_
 
-- [ ] 11.7 Enhance TaskNode component with inline child creation
+- [x] 11.7 Enhance TaskNode component with inline child creation
   - Update context menu to trigger inline child task creation
   - Integrate InlineTaskForm component within TaskNode rendering
   - Implement automatic parent node expansion on child creation

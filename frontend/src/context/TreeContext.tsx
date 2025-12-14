@@ -12,12 +12,22 @@ type TreeAction =
   | { type: 'EXPAND_NODE'; payload: string }
   | { type: 'COLLAPSE_NODE'; payload: string }
   | { type: 'SELECT_NODE'; payload: string | null }
-  | { type: 'SET_ROOT_NODES'; payload: TreeNode[] };
+  | { type: 'SET_ROOT_NODES'; payload: TreeNode[] }
+  | { type: 'START_INLINE_CREATION'; payload: string }
+  | { type: 'CANCEL_INLINE_CREATION' }
+  | { type: 'UPDATE_INLINE_DESCRIPTION'; payload: string }
+  | { type: 'SET_INLINE_ERROR'; payload: string | null };
 
 const initialState: TreeState = {
   expandedNodes: new Set<string>(),
   selectedNodeId: null,
   rootNodes: [],
+  inlineCreationState: {
+    activeParentId: null,
+    isCreating: false,
+    description: '',
+    error: null,
+  },
 };
 
 function treeReducer(state: TreeState, action: TreeAction): TreeState {
@@ -45,6 +55,42 @@ function treeReducer(state: TreeState, action: TreeAction): TreeState {
       return { ...state, selectedNodeId: action.payload };
     case 'SET_ROOT_NODES':
       return { ...state, rootNodes: action.payload };
+    case 'START_INLINE_CREATION':
+      return {
+        ...state,
+        inlineCreationState: {
+          activeParentId: action.payload,
+          isCreating: true,
+          description: '',
+          error: null,
+        },
+      };
+    case 'CANCEL_INLINE_CREATION':
+      return {
+        ...state,
+        inlineCreationState: {
+          activeParentId: null,
+          isCreating: false,
+          description: '',
+          error: null,
+        },
+      };
+    case 'UPDATE_INLINE_DESCRIPTION':
+      return {
+        ...state,
+        inlineCreationState: {
+          ...state.inlineCreationState,
+          description: action.payload,
+        },
+      };
+    case 'SET_INLINE_ERROR':
+      return {
+        ...state,
+        inlineCreationState: {
+          ...state.inlineCreationState,
+          error: action.payload,
+        },
+      };
     default:
       return state;
   }
@@ -129,6 +175,48 @@ export function TreeProvider({ children }: TreeProviderProps): React.JSX.Element
     }
   }, [rootNodes, refreshTasks]);
 
+  // Inline creation handlers
+  const startInlineCreation = useCallback((parentId: string): void => {
+    dispatch({ type: 'START_INLINE_CREATION', payload: parentId });
+    // Automatically expand the parent node to show the inline form
+    expandNode(parentId);
+  }, [expandNode]);
+
+  const cancelInlineCreation = useCallback((): void => {
+    dispatch({ type: 'CANCEL_INLINE_CREATION' });
+  }, []);
+
+  const updateInlineDescription = useCallback((description: string): void => {
+    dispatch({ type: 'UPDATE_INLINE_DESCRIPTION', payload: description });
+  }, []);
+
+  const completeInlineCreation = useCallback(async (): Promise<void> => {
+    const { activeParentId, description } = state.inlineCreationState;
+    
+    if (activeParentId === null || description.trim() === '') {
+      dispatch({ type: 'SET_INLINE_ERROR', payload: 'Description is required' });
+      return;
+    }
+
+    try {
+      // Import API client and TaskContext dynamically to avoid circular dependency
+      const { apiClient } = await import('../services/api/apiClient.js');
+      await apiClient.createChildTask(description.trim(), activeParentId);
+      
+      // Clear inline creation state
+      dispatch({ type: 'CANCEL_INLINE_CREATION' });
+      
+      // Refresh tasks to get updated tree structure
+      await refreshTasks();
+      
+    } catch (error) {
+      dispatch({ 
+        type: 'SET_INLINE_ERROR', 
+        payload: error instanceof Error ? error.message : 'Failed to create task' 
+      });
+    }
+  }, [state.inlineCreationState, refreshTasks]);
+
   const contextValue: TreeContextValue = {
     ...state,
     rootNodes,
@@ -137,6 +225,10 @@ export function TreeProvider({ children }: TreeProviderProps): React.JSX.Element
     collapseNode,
     selectNode,
     moveTask,
+    startInlineCreation,
+    cancelInlineCreation,
+    updateInlineDescription,
+    completeInlineCreation,
   };
 
   return (

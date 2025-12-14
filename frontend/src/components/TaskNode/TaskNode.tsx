@@ -5,6 +5,7 @@ import { useTreeContext } from '../../context/TreeContext.js';
 import type { BaseComponentProps } from '../../types/app.js';
 import type { TaskStatus } from '../../types/task.js';
 import type { TreeNode } from '../../types/tree.js';
+import { InlineTaskForm } from '../InlineTaskForm/InlineTaskForm.js';
 import './TaskNode.css';
 
 interface TaskNodeProps extends BaseComponentProps {
@@ -35,8 +36,15 @@ export function TaskNode({
   className = '',
   'data-testid': testId = 'task-node'
 }: TaskNodeProps): React.JSX.Element {
-  const { toggleNode, selectNode, expandedNodes, selectedNodeId } = useTreeContext();
-  const { updateTask, updateTaskStatus, deleteTask, createChildTask } = useTaskContext();
+  const { 
+    toggleNode, 
+    selectNode, 
+    expandedNodes, 
+    selectedNodeId, 
+    startInlineCreation,
+    inlineCreationState 
+  } = useTreeContext();
+  const { updateTask, updateTaskStatus, deleteTask } = useTaskContext();
   const { task, children, level } = node;
 
   // Local state for inline editing and context menu
@@ -174,22 +182,10 @@ export function TaskNode({
     setShowContextMenu(false);
   }, [task.description, task.id, deleteTask]);
 
-  const handleAddChild = useCallback(async (): Promise<void> => {
-    const description = window.prompt('Enter task description:');
-    if (description !== null && description.trim() !== '') {
-      try {
-        await createChildTask(description.trim(), task.id);
-        // Expand the node to show the new child
-        if (!isExpanded) {
-          toggleNode(task.id);
-        }
-      } catch {
-        // Error handling is managed by TaskContext
-        // Errors are displayed through the context's error state
-      }
-    }
+  const handleAddChild = useCallback((): void => {
+    startInlineCreation(task.id);
     setShowContextMenu(false);
-  }, [createChildTask, task.id, isExpanded, toggleNode]);
+  }, [startInlineCreation, task.id]);
 
   const handleStatusChange = useCallback(async (newStatus: TaskStatus): Promise<void> => {
     try {
@@ -327,9 +323,7 @@ export function TaskNode({
           
           <button
             className="task-node__context-menu-item"
-            onClick={() => {
-              void handleAddChild();
-            }}
+            onClick={handleAddChild}
             data-testid={`${testId}-context-add-child`}
           >
             ➕ Add Child
@@ -380,6 +374,15 @@ export function TaskNode({
             🗑️ Delete
           </button>
         </div>
+      )}
+
+      {/* Inline task creation form */}
+      {inlineCreationState.isCreating && inlineCreationState.activeParentId === task.id && (
+        <InlineTaskForm
+          parentId={task.id}
+          level={level}
+          data-testid={`${testId}-inline-form`}
+        />
       )}
 
       {hasChildren && isExpanded && (

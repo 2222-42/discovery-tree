@@ -55,6 +55,8 @@ export interface TreeState {
   selectedNodeId: string | null;
   /** The root tree nodes */
   rootNodes: TreeNode[];
+  /** Inline task creation state */
+  inlineCreationState: InlineCreationState;
 }
 
 /**
@@ -67,4 +69,18 @@ export interface TreeDragOperation {
   targetParentId: string | null;
   /** Target position within the parent's children */
   targetPosition: number;
+}
+
+/**
+ * Inline task creation state
+ */
+export interface InlineCreationState {
+  /** ID of the parent task where inline creation is active (null if none) */
+  activeParentId: string | null;
+  /** Whether inline creation is currently in progress */
+  isCreating: boolean;
+  /** Current description being entered */
+  description: string;
+  /** Error message for inline creation, if any */
+  error: string | null;
 }
