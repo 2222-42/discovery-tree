@@ -5,7 +5,6 @@
  * Tests the development server setup and hot reloading functionality
  */
 
-import { spawn } from 'child_process';
 import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
@@ -50,46 +49,7 @@ if (import.meta.hot) {
   console.log('✅ Created test component for HMR testing');
 }
 
-/**
- * Update the test component to verify HMR works
- */
-function updateTestComponent() {
-  const updatedComponent = `
-import React from 'react';
 
-/**
- * Test component for Hot Module Replacement verification
- */
-export const TestHMR: React.FC = () => {
-  return (
-    <div style={{ 
-      padding: '20px', 
-      backgroundColor: '#e8f5e8', 
-      border: '2px solid #28a745',
-      borderRadius: '8px',
-      margin: '10px'
-    }}>
-      <h3>HMR Test Component - Version 2 (Updated!)</h3>
-      <p>This component has been updated to test hot module replacement.</p>
-      <p>Current time: {new Date().toLocaleTimeString()}</p>
-      <p style={{ color: '#28a745', fontWeight: 'bold' }}>
-        🎉 Hot reload successful!
-      </p>
-    </div>
-  );
-};
-
-export default TestHMR;
-
-// Enable HMR for this component
-if (import.meta.hot) {
-  import.meta.hot.accept();
-}
-`;
-
-  writeFileSync(TEST_COMPONENT_PATH, updatedComponent);
-  console.log('✅ Updated test component to verify HMR');
-}
 
 /**
  * Test environment variables

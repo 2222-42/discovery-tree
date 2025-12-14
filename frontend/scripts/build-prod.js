@@ -5,7 +5,7 @@
  */
 
 import { execSync } from 'child_process';
-import { existsSync, statSync, readFileSync } from 'fs';
+import { existsSync, statSync } from 'fs';
 import { join } from 'path';
 
 const DIST_DIR = 'dist';
@@ -102,7 +102,7 @@ try {
   console.log('\n🔍 Testing production build...');
   console.log('Starting preview server (will run for 5 seconds)...');
   
-  const previewProcess = execSync('timeout 5s npm run preview:prod || true', { 
+  execSync('timeout 5s npm run preview:prod || true', { 
     stdio: 'pipe',
     encoding: 'utf8'
   });
