@@ -4,7 +4,9 @@
  */
 
 import * as fc from 'fast-check';
-import { TreeNode, TreeState, TreeDragOperation } from '@/types/tree.js';
+
+import { TreeNode } from '@/types/tree.js';
+
 import { taskArb, rootTaskArb, childTaskArb, taskIdArb } from './taskGenerators.js';
 
 /**
@@ -43,7 +45,7 @@ export const treeNodeArb: fc.Arbitrary<TreeNode> = fc.letrec(tie => ({
     level: treeLevelArb,
   }).map(node => {
     // Ensure children have correct level and parent relationships
-    const adjustedChildren = node.children.map((child, index) => ({
+    const adjustedChildren = (node.children as TreeNode[]).map((child, index) => ({
       ...child,
       level: node.level + 1,
       task: {
@@ -70,7 +72,7 @@ export const rootTreeNodeArb = fc.record({
   level: fc.constant(0),
 }).map(node => ({
   ...node,
-  children: node.children.map((child, index) => ({
+  children: (node.children as TreeNode[]).map((child, index) => ({
     ...child,
     level: 1,
     task: {
@@ -127,7 +129,7 @@ export const validTreeArb = fc.integer({ min: 1, max: 4 }).chain(depth => {
         isExpanded: fc.constant(false),
         level: fc.constant(level),
       }).map(node => {
-        const uniqueId = `task-${++idCounter}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const uniqueId = `task-${++idCounter}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
         return {
           ...node,
           task: {
@@ -146,7 +148,7 @@ export const validTreeArb = fc.integer({ min: 1, max: 4 }).chain(depth => {
       isExpanded: expansionStateArb,
       level: fc.constant(level),
     }).chain(nodeData => {
-      const uniqueId = `task-${++idCounter}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const uniqueId = `task-${++idCounter}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
       const nodeTask = {
         ...nodeData.task,
         id: uniqueId,

@@ -43,8 +43,8 @@ export const productionConfig = {
   
   // Build information
   build: {
-    version: import.meta.env.VITE_APP_VERSION ?? '1.0.0',
-    buildTime: import.meta.env['VITE_BUILD_TIME'] ?? new Date().toISOString(),
+    version: import.meta.env.VITE_APP_VERSION || '1.0.0',
+    buildTime: import.meta.env['VITE_BUILD_TIME'] || new Date().toISOString(),
     environment: 'production',
   },
 } as const;

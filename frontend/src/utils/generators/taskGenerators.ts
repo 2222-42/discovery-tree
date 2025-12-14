@@ -4,7 +4,8 @@
  */
 
 import * as fc from 'fast-check';
-import { Task, TaskStatus } from '@/types/task.js';
+
+import { TaskStatus } from '@/types/task.js';
 
 /**
  * Generator for valid task IDs
@@ -23,7 +24,7 @@ export const taskIdArb = fc.oneof(
  */
 export const taskDescriptionArb = fc.oneof(
   // Short descriptions
-  fc.stringMatching(/^[A-Z][a-z\s]{10,50}$/),
+  fc.stringMatching(/^[A-Z][a-z\\s]{10,50}$/),
   // Medium descriptions with punctuation
   fc.stringMatching(/^[A-Z][a-zA-Z0-9\s\.,!?-]{20,100}$/),
   // Longer descriptions

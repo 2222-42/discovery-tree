@@ -6,6 +6,8 @@
 import { render, RenderOptions } from '@testing-library/react';
 import { ReactElement } from 'react';
 
+import { TreeNode } from '@/types/tree.js';
+
 /**
  * Custom render function that includes common providers
  */
@@ -16,7 +18,7 @@ interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
 export const renderWithProviders = (
   ui: ReactElement,
   options: CustomRenderOptions = {}
-) => {
+): ReturnType<typeof render> => {
   return render(ui, { ...options });
 };
 
@@ -36,7 +38,7 @@ export const createMockApiError = (message: string, status = 500, delay = 0): Pr
   return new Promise((_, reject) => {
     setTimeout(() => {
       const error = new Error(message);
-      (error as any).status = status;
+      (error as Error & { status: number }).status = status;
       reject(error);
     }, delay);
   });
@@ -59,10 +61,10 @@ export const createTestId = (component: string, element?: string): string => {
 /**
  * Helper to validate tree structure consistency
  */
-export const validateTreeStructure = (nodes: any[]): boolean => {
+export const validateTreeStructure = (nodes: TreeNode[]): boolean => {
   const visitedIds = new Set<string>();
   
-  const validateNode = (node: any, expectedLevel: number): boolean => {
+  const validateNode = (node: TreeNode, expectedLevel: number): boolean => {
     // Check for duplicate IDs
     if (visitedIds.has(node.task.id)) {
       return false;
@@ -75,7 +77,7 @@ export const validateTreeStructure = (nodes: any[]): boolean => {
     }
     
     // Check children
-    return node.children.every((child: any, index: number) => {
+    return node.children.every((child: TreeNode, index: number) => {
       // Check parent-child relationship
       if (child.task.parentId !== node.task.id) {
         return false;
@@ -97,12 +99,14 @@ export const validateTreeStructure = (nodes: any[]): boolean => {
 /**
  * Helper to extract all task IDs from a tree structure
  */
-export const extractAllTaskIds = (nodes: any[]): string[] => {
+export const extractAllTaskIds = (nodes: TreeNode[]): string[] => {
   const ids: string[] = [];
   
-  const traverse = (node: any) => {
+  const traverse = (node: TreeNode): void => {
     ids.push(node.task.id);
-    node.children?.forEach(traverse);
+    if (node.children && node.children.length > 0) {
+      node.children.forEach(traverse);
+    }
   };
   
   nodes.forEach(traverse);

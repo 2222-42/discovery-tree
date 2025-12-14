@@ -3,8 +3,14 @@
  * This validates that our property-based testing infrastructure is working
  */
 
-import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
+
+import { describe, it, expect } from 'vitest';
+
+import { TaskStatus } from '@/types/task.js';
+
+import { validateTreeStructure } from '@/utils/testUtils.js';
+
 import {
   taskArb,
   rootTaskArb,
@@ -14,8 +20,6 @@ import {
   validTreeArb,
   consistentTreeStateArb,
 } from './index.js';
-import { TaskStatus } from '@/types/task.js';
-import { validateTreeStructure } from '@/utils/testUtils.js';
 
 describe('Task Generators', () => {
   it('should generate valid task objects', () => {
@@ -149,9 +153,9 @@ describe('Tree Generators', () => {
         expect(treeState.expandedNodes instanceof Set).toBe(true);
 
         // If there's a selected node, it should exist in the tree
-        if (treeState.selectedNodeId) {
+        if (treeState.selectedNodeId !== null && treeState.selectedNodeId !== undefined) {
           const allIds = new Set<string>();
-          const collectIds = (node: any) => {
+          const collectIds = (node: any): void => {
             allIds.add(node.task.id);
             node.children.forEach(collectIds);
           };
@@ -162,7 +166,7 @@ describe('Tree Generators', () => {
 
         // All expanded nodes should exist in the tree
         const allIds = new Set<string>();
-        const collectIds = (node: any) => {
+        const collectIds = (node: any): void => {
           allIds.add(node.task.id);
           node.children.forEach(collectIds);
         };
