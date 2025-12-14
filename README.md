@@ -53,3 +53,29 @@ When `ENABLE_SWAGGER` is true (default), interactive API documentation is availa
 
 The API provides a health check endpoint at:
 - `GET /health` - Returns server status
+
+## Frontend
+
+The Discovery Tree includes a React-based web interface that provides an intuitive way to interact with the task tree structure. The frontend offers:
+
+- Interactive tree visualization with expandable/collapsible nodes
+- Task creation, editing, and status management
+- Real-time updates and responsive design
+- Full TypeScript integration with the API
+
+### Getting Started with Frontend
+
+```bash
+# Navigate to frontend directory
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+
+The frontend will be available at `http://localhost:3000` and will automatically connect to the API server.
+
+**For detailed frontend setup, configuration, and development information, see [frontend/README.md](frontend/README.md).**
