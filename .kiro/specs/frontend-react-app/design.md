@@ -56,13 +56,23 @@ The frontend follows a layered architecture pattern:
 - Displays task status, description, and actions
 - Supports inline editing capabilities
 - Context menu for task operations
+- Inline child task creation interface
+- Visual parent-child relationship indicators
 
-#### 4. TaskForm Component
+#### 4. InlineTaskForm Component
+- Lightweight inline form for creating child tasks
+- Appears directly within the tree structure
+- Maintains visual hierarchy through indentation
+- Provides immediate feedback and validation
+- Seamless integration with tree interactions
+
+#### 5. TaskForm Component
 - Form for creating and editing tasks
 - Validation for task description and status
-- Modal or sidebar presentation
+- Modal or sidebar presentation for detailed editing
+- Supports both root and child task creation modes
 
-#### 5. TaskDetails Component
+#### 6. TaskDetails Component
 - Detailed view of selected task
 - Shows all task properties and metadata
 - Provides access to all task operations
@@ -137,6 +147,14 @@ interface AppState {
   loading: boolean;
   error: string | null;
   treeData: TreeNode[];
+  inlineCreationState: InlineCreationState;
+}
+
+interface InlineCreationState {
+  activeParentId: string | null;
+  isCreating: boolean;
+  description: string;
+  error: string | null;
 }
 ```
 
@@ -200,6 +218,22 @@ After reviewing all properties identified in the prework analysis, several can b
 **Property 7: Error handling consistency**
 *For any* failed API operation, the system should display appropriate error messages without corrupting the current tree state
 **Validates: Requirements 4.5**
+
+**Property 8: Inline task creation form display**
+*For any* task node in the tree, when child task creation is triggered, an inline form should appear directly within the tree interface at the correct hierarchical position
+**Validates: Requirements 5.1, 5.2**
+
+**Property 9: Parent-child visual relationship consistency**
+*For any* inline child task creation form, the visual indentation and hierarchy indicators should correctly represent the parent-child relationship
+**Validates: Requirements 5.3**
+
+**Property 10: Inline creation state management**
+*For any* active inline task creation session, canceling the creation should remove the form and restore the tree to its previous state without side effects
+**Validates: Requirements 5.4**
+
+**Property 11: Child task creation workflow completion**
+*For any* successful child task creation, the parent node should automatically expand and the new child task should appear in the correct hierarchical position
+**Validates: Requirements 5.5**
 
 ## Error Handling
 
@@ -352,8 +386,48 @@ interface TreeContextState {
   expandedNodes: Set<string>;
   selectedNodeId: string | null;
   treeData: TreeNode[];
+  inlineCreationState: InlineCreationState;
+}
+
+interface InlineCreationState {
+  activeParentId: string | null;
+  isCreating: boolean;
+  description: string;
+  error: string | null;
 }
 ```
+
+### Inline Child Task Creation Design
+
+**User Experience Flow**:
+1. User right-clicks on a task node or uses keyboard shortcut
+2. Context menu appears with "Add Child Task" option
+3. User selects "Add Child Task"
+4. Inline form appears immediately below the parent task
+5. Form is visually indented to show parent-child relationship
+6. User types task description and presses Enter or clicks Save
+7. Parent node automatically expands (if collapsed)
+8. New child task appears in correct position
+9. Form disappears and focus returns to tree
+
+**Visual Design Principles**:
+- **Hierarchical Indentation**: Child task forms use same indentation as child tasks would
+- **Visual Continuity**: Form styling matches existing task node styling
+- **Clear Affordances**: Form has clear save/cancel buttons and keyboard shortcuts
+- **Immediate Feedback**: Real-time validation and error display
+- **Contextual Positioning**: Form appears exactly where the new task will be placed
+
+**State Management**:
+- **Single Active Form**: Only one inline creation form can be active at a time
+- **Automatic Cleanup**: Forms are automatically cleaned up on navigation or errors
+- **Optimistic Updates**: UI updates immediately while API call is in progress
+- **Error Recovery**: Failed creations restore previous state and show error messages
+
+**Keyboard Interactions**:
+- **Enter**: Save and create task
+- **Escape**: Cancel creation and remove form
+- **Tab**: Navigate between form elements
+- **Arrow Keys**: Navigate tree while form is inactive
 
 ### Performance Considerations
 
