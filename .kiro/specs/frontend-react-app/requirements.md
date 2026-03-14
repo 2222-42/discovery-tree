@@ -11,6 +11,9 @@ This document specifies the requirements for a React+TypeScript frontend applica
 - **ESLint**: A static code analysis tool for identifying and fixing JavaScript/TypeScript code issues
 - **TypeScript**: A strongly typed programming language that builds on JavaScript
 - **React**: A JavaScript library for building user interfaces
+- **Inline Task Creation**: The ability to create new tasks directly within the tree interface without modal dialogs or separate forms
+- **Parent-Child Relationship**: The hierarchical connection between tasks where one task (parent) contains other tasks (children)
+- **Tree Interface**: The visual representation of the hierarchical task structure in the user interface
 
 ## Requirements
 
@@ -63,6 +66,18 @@ This document specifies the requirements for a React+TypeScript frontend applica
 5. WHEN API operations fail THEN the system SHALL display appropriate error messages and maintain data consistency
 
 ### Requirement 5
+
+**User Story:** As a user, I want intuitive child task creation capabilities, so that I can easily build hierarchical task structures at any level of nesting.
+
+#### Acceptance Criteria
+
+1. WHEN a user wants to add a child task THEN the system SHALL provide inline task creation forms directly within the tree interface
+2. WHEN a user creates a child task THEN the system SHALL display the new task form immediately below the parent task without requiring navigation
+3. WHEN a child task is being created THEN the system SHALL visually indicate the parent-child relationship through indentation and visual cues
+4. WHEN a user cancels child task creation THEN the system SHALL remove the inline form and return to the previous tree state
+5. WHEN a child task is successfully created THEN the system SHALL automatically expand the parent node and display the new child task in the correct hierarchical position
+
+### Requirement 6
 
 **User Story:** As a developer, I want proper project structure and build tooling, so that the frontend application is maintainable and follows modern development practices.
 

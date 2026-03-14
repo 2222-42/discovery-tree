@@ -240,6 +240,87 @@
   border-left: 1px solid #e5e7eb;
 }
 
+/* Drag and drop styles */
+.task-node--dragging {
+  opacity: 0.5;
+  transform: rotate(2deg);
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.task-node--drop-target {
+  position: relative;
+}
+
+.task-node--drag-over {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.task-node--drop-before::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background-color: #3b82f6;
+  border-radius: 2px;
+  z-index: 10;
+  animation: dropIndicator 0.3s ease-in-out;
+}
+
+.task-node--drop-after::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background-color: #3b82f6;
+  border-radius: 2px;
+  z-index: 10;
+  animation: dropIndicator 0.3s ease-in-out;
+}
+
+.task-node--drop-child {
+  border: 2px dashed #3b82f6;
+  border-radius: 4px;
+  background-color: rgba(59, 130, 246, 0.05);
+  animation: dropChildIndicator 0.3s ease-in-out;
+}
+
+.task-node--drop-child .task-node__content {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+@keyframes dropIndicator {
+  0% { opacity: 0; transform: scaleX(0); }
+  100% { opacity: 1; transform: scaleX(1); }
+}
+
+@keyframes dropChildIndicator {
+  0% { border-color: transparent; background-color: transparent; }
+  100% { border-color: #3b82f6; background-color: rgba(59, 130, 246, 0.05); }
+}
+
+/* Drag handle cursor */
+.task-node__content[draggable="true"] {
+  cursor: grab;
+}
+
+.task-node__content[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+/* Disable dragging while editing */
+.task-node--editing .task-node__content {
+  cursor: default;
+}
+
+.task-node--editing .task-node__content[draggable="true"] {
+  cursor: default;
+}
+
 /* Loading state for task operations */
 .task-node--loading .task-node__content {
   opacity: 0.7;
@@ -427,5 +508,24 @@
   
   .task-node__context-menu-item--danger:hover {
     background-color: #7f1d1d;
+  }
+  
+  /* Dark mode drag and drop styles */
+  .task-node--drag-over {
+    background-color: rgba(59, 130, 246, 0.2);
+  }
+  
+  .task-node--drop-before::before,
+  .task-node--drop-after::after {
+    background-color: #60a5fa;
+  }
+  
+  .task-node--drop-child {
+    border-color: #60a5fa;
+    background-color: rgba(59, 130, 246, 0.1);
+  }
+  
+  .task-node--drop-child .task-node__content {
+    background-color: rgba(59, 130, 246, 0.15);
   }
 }

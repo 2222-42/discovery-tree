@@ -5,6 +5,7 @@ import { useTreeContext } from '../../context/TreeContext.js';
 import type { BaseComponentProps } from '../../types/app.js';
 import type { TaskStatus } from '../../types/task.js';
 import type { TreeNode } from '../../types/tree.js';
+import { InlineTaskForm } from '../InlineTaskForm/InlineTaskForm.js';
 import './TaskNode.css';
 
 interface TaskNodeProps extends BaseComponentProps {
@@ -35,8 +36,20 @@ export function TaskNode({
   className = '',
   'data-testid': testId = 'task-node'
 }: TaskNodeProps): React.JSX.Element {
-  const { toggleNode, selectNode, expandedNodes, selectedNodeId } = useTreeContext();
-  const { updateTask, updateTaskStatus, deleteTask, createChildTask } = useTaskContext();
+  const { 
+    toggleNode, 
+    selectNode, 
+    expandedNodes, 
+    selectedNodeId, 
+    startInlineCreation,
+    inlineCreationState,
+    dragDropState,
+    startDrag,
+    endDrag,
+    setDragOver,
+    handleDrop
+  } = useTreeContext();
+  const { updateTask, updateTaskStatus, deleteTask } = useTaskContext();
   const { task, children, level } = node;
 
   // Local state for inline editing and context menu
@@ -174,22 +187,10 @@ export function TaskNode({
     setShowContextMenu(false);
   }, [task.description, task.id, deleteTask]);
 
-  const handleAddChild = useCallback(async (): Promise<void> => {
-    const description = window.prompt('Enter task description:');
-    if (description !== null && description.trim() !== '') {
-      try {
-        await createChildTask(description.trim(), task.id);
-        // Expand the node to show the new child
-        if (!isExpanded) {
-          toggleNode(task.id);
-        }
-      } catch {
-        // Error handling is managed by TaskContext
-        // Errors are displayed through the context's error state
-      }
-    }
+  const handleAddChild = useCallback((): void => {
+    startInlineCreation(task.id);
     setShowContextMenu(false);
-  }, [createChildTask, task.id, isExpanded, toggleNode]);
+  }, [startInlineCreation, task.id]);
 
   const handleStatusChange = useCallback(async (newStatus: TaskStatus): Promise<void> => {
     try {
@@ -206,6 +207,68 @@ export function TaskNode({
     event.stopPropagation();
     startEditing();
   }, [startEditing]);
+
+  // Drag and drop handlers
+  const handleDragStart = useCallback((event: React.DragEvent): void => {
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', task.id);
+    startDrag(task.id);
+  }, [task.id, startDrag]);
+
+  const handleDragEnd = useCallback((): void => {
+    endDrag();
+  }, [endDrag]);
+
+  const handleDragOver = useCallback((event: React.DragEvent): void => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    
+    // Calculate drop position based on mouse position
+    const rect = event.currentTarget.getBoundingClientRect();
+    const y = event.clientY - rect.top;
+    const height = rect.height;
+    
+    let position: 'before' | 'after' | 'child';
+    if (y < height * 0.25) {
+      position = 'before';
+    } else if (y > height * 0.75) {
+      position = 'after';
+    } else {
+      position = 'child';
+    }
+    
+    setDragOver(task.id, position);
+  }, [task.id, setDragOver]);
+
+  const handleDragLeave = useCallback((event: React.DragEvent): void => {
+    // Only clear drag over if we're actually leaving the element
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = event.clientX;
+    const y = event.clientY;
+    
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+      setDragOver(null, null);
+    }
+  }, [setDragOver]);
+
+  const handleDropEvent = useCallback((event: React.DragEvent): void => {
+    event.preventDefault();
+    
+    const rect = event.currentTarget.getBoundingClientRect();
+    const y = event.clientY - rect.top;
+    const height = rect.height;
+    
+    let position: 'before' | 'after' | 'child';
+    if (y < height * 0.25) {
+      position = 'before';
+    } else if (y > height * 0.75) {
+      position = 'after';
+    } else {
+      position = 'child';
+    }
+    
+    void handleDrop(task.id, position);
+  }, [task.id, handleDrop]);
 
   const getStatusIcon = (): string => {
     switch (task.status) {
@@ -237,6 +300,11 @@ export function TaskNode({
     }
   };
 
+  // Drag and drop visual states
+  const isDragging = dragDropState.isDragging && dragDropState.draggedTaskId === task.id;
+  const isDragOver = dragDropState.dragOverTaskId === task.id;
+  const isValidDropTarget = dragDropState.isDragging && dragDropState.draggedTaskId !== task.id;
+
   const nodeClasses = [
     'task-node',
     `task-node--level-${level.toString()}`,
@@ -244,6 +312,10 @@ export function TaskNode({
     isSelected ? 'task-node--selected' : '',
     hasChildren ? 'task-node--has-children' : '',
     isEditing ? 'task-node--editing' : '',
+    isDragging ? 'task-node--dragging' : '',
+    isDragOver ? 'task-node--drag-over' : '',
+    isValidDropTarget ? 'task-node--drop-target' : '',
+    dragDropState.dropPosition ? `task-node--drop-${dragDropState.dropPosition}` : '',
     className
   ].filter(Boolean).join(' ');
 
@@ -255,6 +327,12 @@ export function TaskNode({
         onDoubleClick={handleDoubleClick}
         onContextMenu={handleContextMenu}
         onKeyDown={handleKeyDown}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDropEvent}
+        draggable={!isEditing}
         tabIndex={0}
         role="treeitem"
         aria-selected={isSelected}
@@ -327,9 +405,7 @@ export function TaskNode({
           
           <button
             className="task-node__context-menu-item"
-            onClick={() => {
-              void handleAddChild();
-            }}
+            onClick={handleAddChild}
             data-testid={`${testId}-context-add-child`}
           >
             ➕ Add Child
@@ -380,6 +456,15 @@ export function TaskNode({
             🗑️ Delete
           </button>
         </div>
+      )}
+
+      {/* Inline task creation form */}
+      {inlineCreationState.isCreating && inlineCreationState.activeParentId === task.id && (
+        <InlineTaskForm
+          parentId={task.id}
+          level={level}
+          data-testid={`${testId}-inline-form`}
+        />
       )}
 
       {hasChildren && isExpanded && (

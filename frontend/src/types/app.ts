@@ -73,6 +73,14 @@ export interface TreeContextActions {
   collapseNode: (nodeId: string) => void;
   selectNode: (nodeId: string | null) => void;
   moveTask: (taskId: string, parentId: string | null, position: number) => Promise<void>;
+  startInlineCreation: (parentId: string) => void;
+  cancelInlineCreation: () => void;
+  updateInlineDescription: (description: string) => void;
+  completeInlineCreation: () => Promise<void>;
+  startDrag: (taskId: string) => void;
+  endDrag: () => void;
+  setDragOver: (taskId: string | null, position: 'before' | 'after' | 'child' | null) => void;
+  handleDrop: (targetTaskId: string, position: 'before' | 'after' | 'child') => Promise<void>;
 }
 
 export interface TreeContextValue extends TreeContextState, TreeContextActions {

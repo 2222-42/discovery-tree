@@ -1,21 +1,129 @@
 [
   {
-    "id": "1862d31b-a413-4543-aff4-0ab592aa935d",
-    "description": "Performance Test Task 2",
-    "status": "TODO",
-    "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
-    "position": 1,
-    "createdAt": "2025-12-14T12:57:20.186018877+09:00",
-    "updatedAt": "2025-12-14T12:57:20.214509259+09:00"
-  },
-  {
-    "id": "7386a4fc-475c-4cb4-a7fb-57c4622dbc7b",
+    "id": "eaba6956-b382-4813-ada1-e19d6e712dae",
     "description": "Performance Test Task 6",
     "status": "TODO",
     "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
-    "position": 7,
-    "createdAt": "2025-12-14T12:57:28.400020489+09:00",
-    "updatedAt": "2025-12-14T12:57:28.583468662+09:00"
+    "position": 1,
+    "createdAt": "2025-12-14T12:57:20.187149803+09:00",
+    "updatedAt": "2025-12-14T13:45:17.718452477+09:00"
+  },
+  {
+    "id": "24c45909-cd73-4a2e-8217-ee0dcf1afbb0",
+    "description": "New Project Phase",
+    "status": "TODO",
+    "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
+    "position": 23,
+    "createdAt": "2025-12-14T13:41:17.815077313+09:00",
+    "updatedAt": "2025-12-14T13:45:27.060055399+09:00"
+  },
+  {
+    "id": "f5a3b208-d3ad-45a8-bfd7-231270d7b14f",
+    "description": "Performance Test Task 7",
+    "status": "TODO",
+    "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
+    "position": 6,
+    "createdAt": "2025-12-14T12:57:28.399597241+09:00",
+    "updatedAt": "2025-12-14T13:45:17.720070955+09:00"
+  },
+  {
+    "id": "66ed57f9-26a7-4db3-a986-b2bcde2884ca",
+    "description": "Performance Test Task 3",
+    "status": "TODO",
+    "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
+    "position": 10,
+    "createdAt": "2025-12-14T13:11:34.103859005+09:00",
+    "updatedAt": "2025-12-14T13:45:17.720296432+09:00"
+  },
+  {
+    "id": "dd2d160c-5efb-41d7-b16d-c9895f4528c4",
+    "description": "grand child 1",
+    "status": "TODO",
+    "parentId": "6288dd52-0034-4ed9-991b-04eb33ac8b80",
+    "position": 0,
+    "createdAt": "2025-12-14T13:47:03.273021697+09:00",
+    "updatedAt": "2025-12-14T13:47:03.273021697+09:00"
+  },
+  {
+    "id": "66ce4eff-c6ce-4bac-9ade-9623a2e79e30",
+    "description": "Performance Test Task 8",
+    "status": "TODO",
+    "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
+    "position": 13,
+    "createdAt": "2025-12-14T13:41:17.656790022+09:00",
+    "updatedAt": "2025-12-14T13:45:27.058750306+09:00"
+  },
+  {
+    "id": "6c83b2ab-c4c5-40ed-955c-99cc957970b6",
+    "description": "Performance Test Task 5",
+    "status": "TODO",
+    "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
+    "position": 13,
+    "createdAt": "2025-12-14T13:41:17.656256678+09:00",
+    "updatedAt": "2025-12-14T13:45:27.058935022+09:00"
+  },
+  {
+    "id": "7ddc2640-5989-41d1-ac13-a0bd1234c9cc",
+    "description": "Performance Test Task 0",
+    "status": "TODO",
+    "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
+    "position": 13,
+    "createdAt": "2025-12-14T13:41:17.654967095+09:00",
+    "updatedAt": "2025-12-14T13:45:27.05911302+09:00"
+  },
+  {
+    "id": "8431d93e-4334-4d89-964a-33fcb2967b2e",
+    "description": "Performance Test Task 2",
+    "status": "TODO",
+    "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
+    "position": 6,
+    "createdAt": "2025-12-14T12:57:28.399607303+09:00",
+    "updatedAt": "2025-12-14T13:45:17.719623024+09:00"
+  },
+  {
+    "id": "3a25ac23-8594-41f9-98fc-94532e6d3fb9",
+    "description": "Performance Test Task 6",
+    "status": "TODO",
+    "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
+    "position": 13,
+    "createdAt": "2025-12-14T13:41:17.656778047+09:00",
+    "updatedAt": "2025-12-14T13:45:27.058027231+09:00"
+  },
+  {
+    "id": "3956322d-7b0b-4ee7-988f-f70cce2683db",
+    "description": "Performance Test Task 8",
+    "status": "TODO",
+    "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
+    "position": 2,
+    "createdAt": "2025-12-14T12:57:20.187138873+09:00",
+    "updatedAt": "2025-12-14T13:45:17.718960467+09:00"
+  },
+  {
+    "id": "c7816d7c-f1f1-4cf2-b4c4-e17800dd4201",
+    "description": "Performance Test Task 8",
+    "status": "TODO",
+    "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
+    "position": 6,
+    "createdAt": "2025-12-14T12:57:28.399619492+09:00",
+    "updatedAt": "2025-12-14T13:45:17.719398985+09:00"
+  },
+  {
+    "id": "7f14dc9f-bc34-47af-9494-638932605635",
+    "description": "grand child2",
+    "status": "TODO",
+    "parentId": "6288dd52-0034-4ed9-991b-04eb33ac8b80",
+    "position": 1,
+    "createdAt": "2025-12-14T13:47:11.891738245+09:00",
+    "updatedAt": "2025-12-14T13:47:11.891738245+09:00"
+  },
+  {
+    "id": "8553ebe0-0178-48b2-8282-256a8294c4da",
+    "description": "Performance Test Task 9",
+    "status": "TODO",
+    "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
+    "position": 13,
+    "createdAt": "2025-12-14T13:41:17.656791673+09:00",
+    "updatedAt": "2025-12-14T13:45:27.050388184+09:00"
   },
   {
     "id": "2d5685b5-1c98-4580-a0fe-fbd272e9edf6",
@@ -27,40 +135,49 @@
     "updatedAt": "2025-12-14T12:57:20.215874129+09:00"
   },
   {
+    "id": "1aaed792-7af1-4723-8c52-823a5b6a4ae9",
+    "description": "Performance Test Task 2",
+    "status": "TODO",
+    "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
+    "position": 13,
+    "createdAt": "2025-12-14T13:41:17.655527886+09:00",
+    "updatedAt": "2025-12-14T13:45:27.059297267+09:00"
+  },
+  {
+    "id": "47465cc2-aa78-424e-8a7e-d987c5fb226d",
+    "description": "Performance Test Task 3",
+    "status": "TODO",
+    "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
+    "position": 13,
+    "createdAt": "2025-12-14T13:41:17.65625608+09:00",
+    "updatedAt": "2025-12-14T13:45:27.059478003+09:00"
+  },
+  {
     "id": "833f09be-54ae-4fac-8a4f-ff3728737017",
     "description": "Performance Test Task 6",
     "status": "TODO",
     "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
-    "position": 13,
+    "position": 10,
     "createdAt": "2025-12-14T13:11:34.10387283+09:00",
-    "updatedAt": "2025-12-14T13:11:34.357858889+09:00"
+    "updatedAt": "2025-12-14T13:45:17.72102257+09:00"
   },
   {
     "id": "6288dd52-0034-4ed9-991b-04eb33ac8b80",
     "description": "Performance Test Task 9",
     "status": "TODO",
     "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
-    "position": 7,
+    "position": 6,
     "createdAt": "2025-12-14T12:57:28.400030914+09:00",
-    "updatedAt": "2025-12-14T12:57:28.582968623+09:00"
+    "updatedAt": "2025-12-14T13:45:17.719839238+09:00"
   },
   {
     "id": "fb5b4a94-e294-40d4-9006-d9dfba0d65e9",
     "description": "Performance Test Task 4",
     "status": "TODO",
     "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
-    "position": 13,
+    "position": 10,
     "createdAt": "2025-12-14T13:11:34.10388853+09:00",
-    "updatedAt": "2025-12-14T13:11:34.360370129+09:00"
-  },
-  {
-    "id": "0a9af84f-478f-435c-afc2-ed35527331f2",
-    "description": "Performance Test Task 0",
-    "status": "TODO",
-    "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
-    "position": 13,
-    "createdAt": "2025-12-14T13:11:34.105503955+09:00",
-    "updatedAt": "2025-12-14T13:11:34.359988504+09:00"
+    "updatedAt": "2025-12-14T13:45:17.720481802+09:00"
   },
   {
     "id": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
@@ -85,98 +202,53 @@
     "description": "Performance Test Task 7",
     "status": "TODO",
     "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
-    "position": 2,
+    "position": 1,
     "createdAt": "2025-12-14T12:57:20.186756996+09:00",
-    "updatedAt": "2025-12-14T12:57:20.216848311+09:00"
+    "updatedAt": "2025-12-14T13:45:17.718667406+09:00"
+  },
+  {
+    "id": "5a4c4c89-c5a4-4976-9a16-06522ee37127",
+    "description": "Performance Test Task 1",
+    "status": "TODO",
+    "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
+    "position": 13,
+    "createdAt": "2025-12-14T13:41:17.655542852+09:00",
+    "updatedAt": "2025-12-14T13:45:27.058473099+09:00"
+  },
+  {
+    "id": "106da054-a150-41b2-ab0f-e8fe3194dd08",
+    "description": "test",
+    "status": "TODO",
+    "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
+    "position": 24,
+    "createdAt": "2025-12-14T13:45:45.777207955+09:00",
+    "updatedAt": "2025-12-14T13:45:45.777207955+09:00"
+  },
+  {
+    "id": "6ea0b08b-79c9-4b2e-84ee-4fa333801f0a",
+    "description": "Performance Test Task 4",
+    "status": "TODO",
+    "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
+    "position": 13,
+    "createdAt": "2025-12-14T13:41:17.656244044+09:00",
+    "updatedAt": "2025-12-14T13:45:27.059848658+09:00"
+  },
+  {
+    "id": "9871305b-06df-4cc0-9b89-4d39b0944628",
+    "description": "Performance Test Task 7",
+    "status": "TODO",
+    "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
+    "position": 13,
+    "createdAt": "2025-12-14T13:41:17.656279109+09:00",
+    "updatedAt": "2025-12-14T13:45:27.059667662+09:00"
   },
   {
     "id": "a643dcfe-f55c-4dd5-81c9-a5a5cbec2b46",
     "description": "Performance Test Task 9",
     "status": "TODO",
     "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
-    "position": 5,
+    "position": 4,
     "createdAt": "2025-12-14T12:57:20.187485882+09:00",
-    "updatedAt": "2025-12-14T12:57:20.215434277+09:00"
-  },
-  {
-    "id": "eaba6956-b382-4813-ada1-e19d6e712dae",
-    "description": "Performance Test Task 6",
-    "status": "TODO",
-    "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
-    "position": 2,
-    "createdAt": "2025-12-14T12:57:20.187149803+09:00",
-    "updatedAt": "2025-12-14T12:57:20.217358966+09:00"
-  },
-  {
-    "id": "aab88886-d686-49f3-b16f-fb76e9d960af",
-    "description": "Consistency Child 2",
-    "status": "TODO",
-    "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
-    "position": 7,
-    "createdAt": "2025-12-14T12:57:28.437896939+09:00",
-    "updatedAt": "2025-12-14T12:57:28.627219548+09:00"
-  },
-  {
-    "id": "f5a3b208-d3ad-45a8-bfd7-231270d7b14f",
-    "description": "Performance Test Task 7",
-    "status": "TODO",
-    "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
-    "position": 7,
-    "createdAt": "2025-12-14T12:57:28.399597241+09:00",
-    "updatedAt": "2025-12-14T12:57:28.584737487+09:00"
-  },
-  {
-    "id": "881f4a02-c550-49e1-9a26-251508f0c2d3",
-    "description": "Performance Test Task 9",
-    "status": "TODO",
-    "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
-    "position": 13,
-    "createdAt": "2025-12-14T13:11:34.104676337+09:00",
-    "updatedAt": "2025-12-14T13:11:34.359205996+09:00"
-  },
-  {
-    "id": "66ed57f9-26a7-4db3-a986-b2bcde2884ca",
-    "description": "Performance Test Task 3",
-    "status": "TODO",
-    "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
-    "position": 13,
-    "createdAt": "2025-12-14T13:11:34.103859005+09:00",
-    "updatedAt": "2025-12-14T13:11:34.358386194+09:00"
-  },
-  {
-    "id": "8431d93e-4334-4d89-964a-33fcb2967b2e",
-    "description": "Performance Test Task 2",
-    "status": "TODO",
-    "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
-    "position": 7,
-    "createdAt": "2025-12-14T12:57:28.399607303+09:00",
-    "updatedAt": "2025-12-14T12:57:28.584298699+09:00"
-  },
-  {
-    "id": "6b1d4cd3-4160-4c3d-8a3e-1ee96429b43c",
-    "description": "Performance Test Task 1",
-    "status": "TODO",
-    "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
-    "position": 13,
-    "createdAt": "2025-12-14T13:11:34.104656142+09:00",
-    "updatedAt": "2025-12-14T13:11:34.359592919+09:00"
-  },
-  {
-    "id": "3956322d-7b0b-4ee7-988f-f70cce2683db",
-    "description": "Performance Test Task 8",
-    "status": "TODO",
-    "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
-    "position": 3,
-    "createdAt": "2025-12-14T12:57:20.187138873+09:00",
-    "updatedAt": "2025-12-14T12:57:20.21671928+09:00"
-  },
-  {
-    "id": "c7816d7c-f1f1-4cf2-b4c4-e17800dd4201",
-    "description": "Performance Test Task 8",
-    "status": "TODO",
-    "parentId": "811452a2-1d08-4867-ba60-e8f37c2a9dc0",
-    "position": 7,
-    "createdAt": "2025-12-14T12:57:28.399619492+09:00",
-    "updatedAt": "2025-12-14T12:57:28.583892638+09:00"
+    "updatedAt": "2025-12-14T13:45:17.719179665+09:00"
   }
 ]
